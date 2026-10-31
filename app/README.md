@@ -50,7 +50,7 @@ src/audio/wav.js         16-bit WAV encode/decode (pure)
 src/store/db.js          IndexedDB recordings
 src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser;
                          tips.js: Home tip card + About tip list;
-                         vowel-space.js: the Live \"Vowel space\" panel)
+                         vowel-space.js: the Live "Vowel space" panel)
 src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
                          (pickAvoiding: random pick that skips recent ids, shared with tips)
