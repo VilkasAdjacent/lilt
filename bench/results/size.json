@@ -1,0 +1,86 @@
+{
+ "generated": "2026-10-31T02:59:44.485Z",
+ "esbuild": "0.28.2",
+ "rows": [
+  {
+   "name": "pitchy",
+   "min_bytes": 8914,
+   "min_gzip_bytes": 3230,
+   "warnings": 0,
+   "total_transfer_gzip_bytes": 3230
+  },
+  {
+   "name": "meyda",
+   "min_bytes": 16653,
+   "min_gzip_bytes": 5446,
+   "warnings": 0,
+   "total_transfer_gzip_bytes": 5446
+  },
+  {
+   "name": "essentia.js (core + wasm inlined as base64, essentia-wasm.es.js)",
+   "min_bytes": 2550942,
+   "min_gzip_bytes": 791147,
+   "warnings": 0,
+   "wasm_inlined": {
+    "inlined_base64_chars": 2423944,
+    "wasm_bytes": 1817958,
+    "wasm_gzip_bytes": 542406,
+    "magic_ok": true
+   },
+   "total_transfer_gzip_bytes": 791147
+  },
+  {
+   "name": "essentia.js (core + essentia-wasm.web.js loader; .wasm fetched separately)",
+   "min_bytes": 199013,
+   "min_gzip_bytes": 47803,
+   "warnings": 0,
+   "wasm_side_file": {
+    "file": "essentia-wasm.web.wasm",
+    "wasm_bytes": 1987689,
+    "wasm_gzip_bytes": 539741
+   },
+   "total_transfer_gzip_bytes": 587544
+  },
+  {
+   "name": "aubiojs (wasm inlined as base64)",
+   "min_bytes": 184557,
+   "min_gzip_bytes": 67270,
+   "warnings": 0,
+   "wasm_inlined": {
+    "inlined_base64_chars": 153612,
+    "wasm_bytes": 115207,
+    "wasm_gzip_bytes": 41366,
+    "magic_ok": true
+   },
+   "total_transfer_gzip_bytes": 67270
+  },
+  {
+   "name": "own: YIN",
+   "min_bytes": 1702,
+   "min_gzip_bytes": 915,
+   "warnings": 0,
+   "total_transfer_gzip_bytes": 915
+  },
+  {
+   "name": "own: LPC formants + resampler",
+   "min_bytes": 2766,
+   "min_gzip_bytes": 1418,
+   "warnings": 0,
+   "total_transfer_gzip_bytes": 1418
+  },
+  {
+   "name": "own: H1-H2 + LTAS tilt",
+   "min_bytes": 1925,
+   "min_gzip_bytes": 967,
+   "warnings": 0,
+   "total_transfer_gzip_bytes": 967
+  },
+  {
+   "name": "own: all three",
+   "min_bytes": 5708,
+   "min_gzip_bytes": 2680,
+   "warnings": 0,
+   "total_transfer_gzip_bytes": 2680
+  }
+ ]
+}

@@ -1,0 +1,122 @@
+{
+ "generated": "2026-10-31T03:11:07.440Z",
+ "node": "v24.11.0",
+ "v8": "13.6.233.10-node.28",
+ "cpu": "AMD Ryzen 7 5800X 8-Core Processor             ",
+ "cores": 16,
+ "frame": "2048 samples @ 48000 Hz, hop 10 ms",
+ "phone_factor": 4,
+ "budget_note": "real-time budget at 10 ms hop = 10 ms/frame on the audio thread; AudioWorklet render quantum = 128 samples (2.67 ms @ 48 kHz)",
+ "results": {
+  "pitch:pitchy": {
+   "desktop_median_ms": 0.1248,
+   "desktop_p90_ms": 0.1659,
+   "phone_est_ms": 0.499
+  },
+  "pitch:aubio_yin": {
+   "desktop_median_ms": 1.8249,
+   "desktop_p90_ms": 3.9796,
+   "phone_est_ms": 7.3
+  },
+  "pitch:aubio_yinfast": {
+   "desktop_median_ms": 0.5314,
+   "desktop_p90_ms": 0.5867,
+   "phone_est_ms": 2.126
+  },
+  "pitch:aubio_yinfft": {
+   "desktop_median_ms": 0.4764,
+   "desktop_p90_ms": 0.5001,
+   "phone_est_ms": 1.906
+  },
+  "pitch:aubio_mcomb": {
+   "desktop_median_ms": 0.9629,
+   "desktop_p90_ms": 0.9953,
+   "phone_est_ms": 3.852
+  },
+  "pitch:aubio_specacf": {
+   "desktop_median_ms": 0.4612,
+   "desktop_p90_ms": 0.489,
+   "phone_est_ms": 1.845
+  },
+  "pitch:ess_yin": {
+   "desktop_median_ms": 10.6878,
+   "desktop_p90_ms": 11.0249,
+   "phone_est_ms": 42.751
+  },
+  "pitch:ess_yinfft": {
+   "desktop_median_ms": 0.5528,
+   "desktop_p90_ms": 0.5777,
+   "phone_est_ms": 2.211
+  },
+  "pitch:own_yin": {
+   "desktop_median_ms": 0.4534,
+   "desktop_p90_ms": 0.4776,
+   "phone_est_ms": 1.813
+  },
+  "formant:own_lpc10 (incl. resample)": {
+   "desktop_median_ms": 0.3053,
+   "desktop_p90_ms": 0.3274,
+   "phone_est_ms": 1.221
+  },
+  "formant:own_lpc12 (incl. resample)": {
+   "desktop_median_ms": 0.3169,
+   "desktop_p90_ms": 0.3775,
+   "phone_est_ms": 1.268
+  },
+  "formant:own_lpc12_bw400 (incl. resample)": {
+   "desktop_median_ms": 0.3112,
+   "desktop_p90_ms": 0.3294,
+   "phone_est_ms": 1.245
+  },
+  "formant:ess_lpc10 (incl. resample)": {
+   "desktop_median_ms": 0.4981,
+   "desktop_p90_ms": 0.5274,
+   "phone_est_ms": 1.992
+  },
+  "formant:own_lpc10 (LPC only)": {
+   "desktop_median_ms": 0.017,
+   "desktop_p90_ms": 0.0203,
+   "phone_est_ms": 0.068
+  },
+  "formant:own_lpc12 (LPC only)": {
+   "desktop_median_ms": 0.0205,
+   "desktop_p90_ms": 0.0239,
+   "phone_est_ms": 0.082
+  },
+  "formant:own_lpc12_bw400 (LPC only)": {
+   "desktop_median_ms": 0.0219,
+   "desktop_p90_ms": 0.025,
+   "phone_est_ms": 0.088
+  },
+  "formant:ess_lpc10 (LPC only)": {
+   "desktop_median_ms": 0.2086,
+   "desktop_p90_ms": 0.2275,
+   "phone_est_ms": 0.834
+  },
+  "tilt:H1-H2 (nfft 16384)": {
+   "desktop_median_ms": 0.7327,
+   "desktop_p90_ms": 0.7766,
+   "phone_est_ms": 2.931
+  },
+  "tilt:H1-H2 (nfft 8192)": {
+   "desktop_median_ms": 0.3341,
+   "desktop_p90_ms": 0.3526,
+   "phone_est_ms": 1.337
+  },
+  "tilt:LTAS accumulate (2048 FFT)": {
+   "desktop_median_ms": 0.0623,
+   "desktop_p90_ms": 0.0812,
+   "phone_est_ms": 0.249
+  },
+  "tilt:meyda slope+centroid+rolloff+flatness": {
+   "desktop_median_ms": 0.2681,
+   "desktop_p90_ms": 0.3101,
+   "phone_est_ms": 1.072
+  },
+  "pitch:ess_pyin+ess_melodia (offline, both, per 10 ms hop)": {
+   "desktop_median_ms": 0.9223,
+   "desktop_p90_ms": null,
+   "phone_est_ms": 3.689
+  }
+ }
+}

@@ -1,0 +1,17 @@
+# Normalise line endings; keep shell-ish files LF on Windows
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets that are committed (small, served by Pages; do NOT put these in LFS:
+# GitHub Pages serves LFS pointer files, not their contents)
+*.woff2 binary
+*.woff binary
+*.png binary
+*.ico binary
+
+# Audio is gitignored. If you ever deliberately track audio (e.g. in a private repo),
+# it goes through LFS. Pages never serves these.
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.m4a filter=lfs diff=lfs merge=lfs -text
+*.flac filter=lfs diff=lfs merge=lfs -text

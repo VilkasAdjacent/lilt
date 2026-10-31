@@ -1,0 +1,18 @@
+{
+ "_about": "Norms transcribed from primary sources by the research agents (2026-10-31). See research/sources.md. Cox 2006 tables could not be obtained (paywalled) - not included.",
+ "elvin2016": {
+  "citation": "Elvin, Williams & Escudero (2016) JASA 140(1):576-581, Table I 'Ave' (mean of medians over 20-80% of vowel; all 6 consonant frames, not hVd only; no SDs). Western Sydney, 12 F / 7 M, 18-30 y. Values via HTML table extraction - verify against PDF.",
+  "url": "https://pubs.aip.org/asa/jasa/article/140/1/576/917323/",
+  "female": {"heed":[454,2580,3022],"hid":[469,2529,3008],"head":[744,2048,2813],"had":[972,1768,2581],"hard":[916,1422,2829],"hud":[879,1522,2877],"hod":[742,1272,2980],"hoard":[608,1033,3073],"hood":[520,1192,2930],"who'd":[445,2130,2636],"heard":[715,1844,2879]},
+  "male":   {"heed":[358,2202,2869],"hid":[378,2079,2732],"head":[575,1820,2642],"had":[776,1609,2519],"hard":[711,1173,2627],"hud":[688,1226,2552],"hod":[601,994,2564],"hoard":[484,798,2635],"hood":[413,991,2478],"who'd":[342,1736,2214],"heard":[537,1475,2467]}
+ },
+ "butcher2006": {
+  "citation": "Butcher (2006) Proc. 11th SST, pp. 449-453, Table 1: 92 young South Australian females, hVd, 3 tokens, LPC at steady-state centre. F1/F2 means only.",
+  "url": "https://assta.org/proceedings/sst/2006/sst2006-116.pdf",
+  "female": {"heed":[396,2737],"hid":[410,2623],"head":[558,2352],"had":[871,1953],"hard":[940,1504],"hud":[906,1574],"hod":[678,1139],"hoard":[456,875],"hood":[430,1038],"who'd":[417,1960],"heard":[566,1843]}
+ },
+ "hillenbrand_clark2009": {
+  "citation": "Hillenbrand & Clark (2009) Atten Percept Psychophys 71(5):1150-1166, p.1151: women/men formant ratios 1.18, 1.17, 1.14 (F1, F2, F3; American English, Hillenbrand et al. 1995); envelope shift used x1.168, f0 x1.7041 (p.1154).",
+  "f_ratio": [1.18, 1.17, 1.14]
+ }
+}

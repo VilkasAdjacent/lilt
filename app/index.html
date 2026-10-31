@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lilt</title>
+  <meta name="description" content="A gentle, private voice practice buddy. Everything stays on your device.">
+  <meta name="theme-color" content="#fff3fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1d1029" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4l7 17 18 2-14 12 4 18-15-9-15 9 4-18L7 23l18-2z' fill='%23ff6fb5' stroke='%233a1f4d' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/styles.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <a class="brand" href="#/home" aria-label="Lilt home">
+      <svg class="brand-star" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4l7 17 18 2-14 12 4 18-15-9-15 9 4-18L7 23l18-2z"/></svg>
+      <span>Lilt</span>
+    </a>
+    <div class="session-pill" id="sessionPill" hidden>
+      <span class="dot" aria-hidden="true"></span>
+      <span id="sessionTime" aria-live="off">0:00</span>
+      <span class="sr-only">minutes of practice so far</span>
+    </div>
+  </header>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <main id="main" tabindex="-1">
+
+    <!-- ============================ HOME ============================ -->
+    <section class="view" data-view="home" aria-labelledby="homeTitle">
+      <div class="hero card">
+        <div class="mascot-wrap" aria-hidden="true">
+          <svg class="mascot" viewBox="0 0 120 120">
+            <g class="mascot-body">
+              <path class="m-star" d="M60 6l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z"/>
+              <path class="m-blob" d="M60 30c26 0 44 18 44 42 0 22-18 38-44 38S16 94 16 72c0-24 18-42 44-42z"/>
+              <ellipse class="m-blush" cx="38" cy="80" rx="8" ry="5"/>
+              <ellipse class="m-blush" cx="82" cy="80" rx="8" ry="5"/>
+              <circle class="m-eye" cx="45" cy="68" r="5"/>
+              <circle class="m-eye" cx="75" cy="68" r="5"/>
+              <circle class="m-shine" cx="47" cy="66" r="1.6"/>
+              <circle class="m-shine" cx="77" cy="66" r="1.6"/>
+              <path class="m-mouth" d="M53 84q7 7 14 0"/>
+            </g>
+          </svg>
+        </div>
+        <h1 id="homeTitle">Hi there <span aria-hidden="true">✨</span></h1>
+        <p class="lede" id="homeLede">No pressure today. Even two minutes counts, and so does zero.</p>
+      </div>
+
+      <button class="btn btn-huge" id="tinyBtn" type="button">
+        <span class="btn-emoji" aria-hidden="true">🌸</span>
+        <span><strong>Tiny session</strong><small>2 minutes, then I'll stop for you</small></span>
+      </button>
+
+      <div class="grid2">
+        <a class="btn btn-soft" href="#/live"><span aria-hidden="true">〰️</span> Just noodle around</a>
+        <a class="btn btn-soft" href="#/record"><span aria-hidden="true">🎙️</span> Record a clip</a>
+      </div>
+
+      <div class="card tip" id="tipCard">
+        <h2>Little idea for today</h2>
+        <p id="tipText"></p>
+        <button class="btn btn-ghost btn-small" id="tipNext" type="button">another one</button>
+      </div>
+
+      <p class="center"><a class="link" href="#/about">About Lilt &amp; voice safety</a></p>
+    </section>
+
+    <!-- ============================ LIVE ============================ -->
+    <section class="view" data-view="live" aria-labelledby="liveTitle" hidden>
+      <h1 id="liveTitle" class="sr-only">Live practice</h1>
+
+      <div class="warn" id="constraintWarn" hidden></div>
+
+      <div class="card pitch-card">
+        <div class="pitch-head">
+          <div>
+            <div class="big-num"><span id="pitchHz">–</span><small> Hz</small></div>
+            <div class="sub" id="pitchNote">&nbsp;</div>
+          </div>
+          <div class="band-chip" id="bandChip" data-state="idle">mic off</div>
+        </div>
+        <canvas class="trace" id="liveTrace" aria-label="Pitch over the last few seconds, with shaded target bands" role="img"></canvas>
+        <div class="legend" id="bandLegend"></div>
+      </div>
+
+      <div class="grid2 meters">
+        <div class="card meter-card">
+          <h2>Loudness</h2>
+          <div class="meter" aria-hidden="true"><div class="meter-fill loud" id="loudFill"></div><div class="meter-mark" id="loudMark"></div></div>
+          <div class="meter-num"><span id="loudNum">–</span> <small>dBFS</small></div>
+        </div>
+        <div class="card meter-card">
+          <h2>Weight</h2>
+          <div class="meter" aria-hidden="true"><div class="meter-fill weight" id="weightFill"></div><div class="meter-mark" id="weightMark"></div></div>
+          <div class="meter-num"><span id="weightWord">–</span></div>
+        </div>
+      </div>
+
+      <div class="ll-chip" id="llChip" data-state="idle" role="status" aria-live="polite">Get loud, stay light. I'll cheer.</div>
+
+      <div class="card">
+        <h2>Loud × light <small class="muted">(top right is the sweet spot)</small></h2>
+        <canvas class="scatter" id="llScatter" role="img" aria-label="Recent loudness against weight. Points in the top-right are loud and light."></canvas>
+      </div>
+
+      <details class="card resonance">
+        <summary><h2>Resonance &amp; details</h2></summary>
+        <div class="formants">
+          <div><span class="lbl">F1</span><span id="f1">–</span></div>
+          <div><span class="lbl">F2</span><span id="f2">–</span></div>
+          <div><span class="lbl">F3</span><span id="f3">–</span></div>
+        </div>
+        <div class="formants small">
+          <div><span class="lbl">H1–H2</span><span id="h1h2">–</span></div>
+          <div><span class="lbl">tilt</span><span id="tilt">–</span></div>
+          <div><span class="lbl">clarity</span><span id="clarity">–</span></div>
+        </div>
+        <p class="muted small-print">For the same vowel, higher F1/F2 usually means a smaller, brighter-sounding space. Above about 200 Hz pitch, F1 is shown greyed with "≈": it often locks onto a harmonic there. Tilt is the 1–4 kHz level against 0–1 kHz over the last second (more negative is a steeper roll-off). The weight meter is a rough guess from H1–H2 and tilt. It's a hint, not a verdict.</p>
+      </details>
+    </section>
+
+    <!-- ============================ RECORD ============================ -->
+    <section class="view" data-view="record" aria-labelledby="recTitle" hidden>
+      <h1 id="recTitle">Record a clip</h1>
+      <div class="card prompt-card">
+        <p class="muted">Something to say, if you like:</p>
+        <p class="prompt" id="promptText"></p>
+        <button class="btn btn-ghost btn-small" id="promptNext" type="button">shuffle</button>
+      </div>
+      <div class="card">
+        <canvas class="trace short" id="recTrace" role="img" aria-label="Live pitch while recording"></canvas>
+        <div class="rec-row">
+          <div class="rec-time" id="recTime">0:00</div>
+          <div class="muted" id="recHint">Tap the big button to start</div>
+        </div>
+      </div>
+      <div class="card saved" id="recSaved" hidden></div>
+    </section>
+
+    <!-- ============================ LIBRARY ============================ -->
+    <section class="view" data-view="library" aria-labelledby="libTitle" hidden>
+      <h1 id="libTitle">Your clips</h1>
+      <p class="muted">Stored only in this browser on this device.</p>
+      <div class="card detail" id="libDetail" hidden>
+        <div class="detail-head">
+          <h2 id="detailTitle">Clip</h2>
+          <button class="btn btn-ghost btn-small" id="detailClose" type="button">close</button>
+        </div>
+        <canvas class="trace" id="detailTrace" role="img" aria-label="Pitch over the whole clip"></canvas>
+        <div class="detail-stats" id="detailStats"></div>
+        <div class="row-btns" id="detailBtns"></div>
+      </div>
+      <div id="libList" class="lib-list"></div>
+      <div id="libEmpty" class="card center" hidden>
+        <p>Nothing here yet, and that's totally fine.</p>
+        <a class="btn btn-soft" href="#/record">Record a little one</a>
+      </div>
+    </section>
+
+    <!-- ============================ SETTINGS ============================ -->
+    <section class="view" data-view="settings" aria-labelledby="setTitle" hidden>
+      <h1 id="setTitle">Settings</h1>
+
+      <fieldset class="card">
+        <legend>Look</legend>
+        <div class="seg" role="radiogroup" aria-label="Theme">
+          <label><input type="radio" name="theme" value="auto"> Auto</label>
+          <label><input type="radio" name="theme" value="light"> Light</label>
+          <label><input type="radio" name="theme" value="dark"> Dark</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Target pitch bands</legend>
+        <label class="check"><input type="checkbox" name="band" value="androgynous"> Androgynous <span class="muted">(145–175 Hz)</span></label>
+        <label class="check"><input type="checkbox" name="band" value="femme"> Femme-leaning <span class="muted">(165–220 Hz)</span></label>
+        <label class="check"><input type="checkbox" id="customOn"> My own band</label>
+        <div class="row-inputs" id="customRow">
+          <label>from <input type="number" id="customLo" min="70" max="400" step="1" inputmode="numeric"> Hz</label>
+          <label>to <input type="number" id="customHi" min="70" max="400" step="1" inputmode="numeric"> Hz</label>
+        </div>
+        <p class="muted small-print">These are just rough neighbourhoods. Lots of women live below them, and that's fine. Resonance and weight matter as much as pitch.</p>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Hearing myself</legend>
+        <div class="seg" role="radiogroup" aria-label="Playback">
+          <label><input type="radio" name="playback" value="audio"> Play my recordings</label>
+          <label><input type="radio" name="playback" value="visuals"> Visuals only</label>
+        </div>
+        <p class="muted small-print">"Visuals only" hides every audio player. You'll still get the pitch line and numbers. You can still export a WAV.</p>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Loud &amp; light</legend>
+        <label class="slider">Counts as "loud" above <output id="loudOut"></output> dBFS
+          <input type="range" id="loudDb" min="-50" max="-10" step="1"></label>
+        <button class="btn btn-ghost btn-small" id="loudCal" type="button">use my current level</button>
+        <label class="slider">Counts as "light" below <output id="lightOut"></output>
+          <input type="range" id="lightMax" min="0.2" max="0.7" step="0.05"></label>
+        <p class="muted small-print">Mic levels differ a lot between phones, so set "loud" to roughly your talking-across-a-room voice.</p>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Gentle limits</legend>
+        <label class="slider">Remind me to rest after <output id="nudgeOut"></output> min
+          <input type="range" id="nudgeMin" min="5" max="20" step="1"></label>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Analysis engines (nerd corner)</legend>
+        <label class="select">Pitch <select id="selPitch"></select></label>
+        <label class="select">Formants <select id="selFormants"></select></label>
+        <label class="select">Weight <select id="selWeight"></select></label>
+        <p class="muted small-print" id="engineInfo"></p>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Storage</legend>
+        <p class="muted small-print" id="storageInfo">Recordings live in this browser only.</p>
+        <button class="btn btn-danger btn-small" id="wipeAll" type="button">Delete all recordings</button>
+      </fieldset>
+
+      <p class="center"><a class="link" href="#/about">About &amp; voice safety</a></p>
+    </section>
+
+    <!-- ============================ ABOUT ============================ -->
+    <section class="view prose" data-view="about" aria-labelledby="aboutTitle" hidden>
+      <h1 id="aboutTitle">About Lilt</h1>
+      <div class="card">
+        <h2>What it is</h2>
+        <p>A little practice buddy that shows your pitch, a guess at vocal weight, loudness and resonance (formants) while you talk. It's built around one goal: <strong>getting louder without getting heavier</strong>.</p>
+        <h2>Privacy</h2>
+        <p>Your audio never leaves this device. No server, no uploads, no analytics. Recordings are kept in this browser's storage until you delete them. Clearing site data deletes them too.</p>
+      </div>
+      <div class="card">
+        <h2>Voice care <span aria-hidden="true">💧</span></h2>
+        <ul>
+          <li><strong>Short and often beats long and heroic.</strong> 5 to 15 minutes is plenty. Lilt will nudge you around the 12-minute mark.</li>
+          <li><strong>Stop if it hurts,</strong> tickles, gets scratchy or tired, or your throat feels tight. Rest is part of practice.</li>
+          <li><strong>Loud should come from breath and space, not squeeze.</strong> If getting louder feels like pushing in your throat, back off a notch.</li>
+          <li>Sip water. Yawn-sighs and lip trills are lovely warm-ups and cool-downs.</li>
+          <li>Hoarse for more than about two weeks, or any pain or a lost voice? See a GP or ENT. A speech pathologist who works with trans voices is gold if you can get to one.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>About the numbers</h2>
+        <ul>
+          <li><strong>Pitch</strong> is fairly trustworthy (within a few cents on clean tones).</li>
+          <li><strong>Weight</strong> is a rough guess from H1–H2 and spectral tilt. It moves with vowel and mic too. Use it to compare yourself today with yourself a moment ago, not with anyone else.</li>
+          <li><strong>Formants</strong> (F1–F3) come from a classic LPC method. They can wobble on high pitches or on "ee"/"oo" vowels.</li>
+          <li><strong>Loudness</strong> is dBFS, which is relative to your mic, not real-world decibels.</li>
+        </ul>
+        <p>None of these is a grade. Your voice is yours on every day, at every number.</p>
+      </div>
+      <div class="card">
+        <h2>If things feel heavy</h2>
+        <p>Voice work can stir stuff up. If you're having a rough time, you deserve support too. In Australia: Lifeline <a class="link" href="tel:131114">13 11 14</a>, QLife (LGBTIQ+ peer support) <a class="link" href="tel:1800184527">1800 184 527</a>.</p>
+      </div>
+      <p class="muted center small-print">Pitch: pitchy (MIT). Fonts: Fredoka &amp; Nunito (OFL). Made with love and a lot of sparkles.</p>
+    </section>
+  </main>
+
+  <!-- Floating mic button: thumb reachable, above the nav -->
+  <div class="fab-wrap" id="fabWrap" hidden>
+    <button class="fab" id="fab" type="button" aria-pressed="false">
+      <span class="fab-icon" aria-hidden="true"></span>
+      <span class="fab-label" id="fabLabel">Start mic</span>
+    </button>
+  </div>
+
+  <nav class="tabbar" aria-label="Main">
+    <a href="#/home" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v8a2 2 0 0 1-2 2h-3v-6H9v6H6a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
+    <a href="#/live" data-tab="live"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h3l2-6 4 12 3-9 2 3h6"/></svg><span>Live</span></a>
+    <a href="#/record" data-tab="record"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg><span>Record</span></a>
+    <a href="#/library" data-tab="library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 5l3.5 1-3.5 14-3.5-1"/></svg><span>Clips</span></a>
+    <a href="#/settings" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span>Settings</span></a>
+  </nav>
+
+  <noscript><p class="card">Lilt needs JavaScript to listen to your mic.</p></noscript>
+</body>
+</html>

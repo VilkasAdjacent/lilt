@@ -1,0 +1,13 @@
+# Pinned for re-runs (created 2026-10-31). Python 3.14.2 (pyenv-win), venv at analysis/.venv
+#   py -3.14 -m venv analysis/.venv   (or: ~/.pyenv/pyenv-win/versions/3.14.2/python.exe -m venv analysis/.venv)
+#   analysis/.venv/Scripts/python.exe -m pip install -r analysis/requirements.txt
+# parselmouth 0.4.7 bundles Praat 6.1.38. If 3.14 wheels ever disappear, Python 3.12 works too.
+praat-parselmouth==0.4.7
+numpy==2.5.4
+scipy==1.18.1
+soundfile==0.14.0
+cffi==2.1.1
+pycparser==3.12
+imageio-ffmpeg==0.7.0
+yt-dlp==2026.10.26
+typing_extensions==4.16.0

@@ -1,0 +1,10 @@
+{
+  "name": "voice-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "serve": "npx serve .",
+    "report": "node scripts/report.js"
+  }
+}
