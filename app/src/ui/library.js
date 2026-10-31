@@ -5,6 +5,7 @@ import { listRecordings, getRecording, deleteRecording } from '../store/db.js';
 import { settings, activeBands } from '../settings.js';
 import { fmtDuration, summarize } from '../summary.js';
 import { drawPitchTrace, sparklineSvg } from './draw.js';
+import * as compareView from './compare-view.js';
 
 const $ = (id) => document.getElementById(id);
 let ctx = null;
@@ -137,8 +138,9 @@ function closeDetail() { stopPlayback(); openRec = null; $('libDetail').hidden =
 export function init(c) {
   ctx = c;
   $('detailClose').addEventListener('click', closeDetail);
+  compareView.init();
   window.addEventListener('resize', () => openRec && !playRaf && drawDetail());
 }
-export function show() { renderList(); }
+export function show() { renderList(); compareView.show(); }
 export function hide() { closeDetail(); }
 export const refresh = renderList;

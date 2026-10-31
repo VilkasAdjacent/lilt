@@ -193,6 +193,18 @@
         <div class="detail-stats" id="detailStats"></div>
         <div class="row-btns" id="detailBtns"></div>
       </div>
+      <details class="card compare" id="cmp">
+        <summary><h2>Compare clips</h2></summary>
+        <p class="muted">Then and now, side by side. These are changes, not grades. Pick two to four clips, or add a recording from this device. Added files are read here and never uploaded or saved.</p>
+        <div id="cmpPick" class="cmp-pick"></div>
+        <input type="file" id="cmpFile" accept=".wav,audio/*" multiple hidden>
+        <div class="row-btns">
+          <button class="btn btn-ghost btn-small" id="cmpAdd" type="button">Add a file</button>
+          <button class="btn btn-soft btn-small" id="cmpGo" type="button" disabled>Compare</button>
+        </div>
+        <p class="muted small-print" id="cmpStatus" role="status"></p>
+        <div id="cmpOut"></div>
+      </details>
       <div id="libList" class="lib-list"></div>
       <div id="libEmpty" class="card center" hidden>
         <p>Nothing here yet, and that's totally fine.</p>

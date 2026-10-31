@@ -23,7 +23,8 @@ export class UtteranceTracker {
     if (last.t - run[0].t < this.minSec) return null;
     return {
       start: run[0].t, end: last.t,
-      f0: median(run, 'f0'), f2: median(run, 'f2'), dbfs: median(run, 'dbfs'), weight: median(run, 'weight'),
+      f0: median(run, 'f0'), f1: median(run, 'f1'), f2: median(run, 'f2'), f3: median(run, 'f3'),
+      dbfs: median(run, 'dbfs'), weight: median(run, 'weight'),
     };
   }
   clear() { this.voiced = []; }

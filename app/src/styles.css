@@ -286,6 +286,29 @@ main { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; outline: none; 
 .row-btns { display: flex; flex-wrap: wrap; gap: 10px; }
 .row-btns .btn { flex: 1 1 140px; }
 
+/* ------------------------------------------------------------- compare -- */
+.compare summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+.compare summary::-webkit-details-marker { display: none; }
+.compare summary::after { content: '▾'; font-size: 1.4rem; transition: transform 0.2s; }
+.compare[open] summary::after { transform: rotate(180deg); }
+.compare summary h2 { margin: 0; }
+.compare h3 { font: 600 1.05rem var(--font-display); margin: 16px 0 6px; }
+.cmp-pick { display: grid; gap: 2px; margin: 4px 0 10px; }
+.cmp-item span { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.cmp-item small { font-weight: 600; color: var(--ink-soft); }
+.cmp-lede { font-weight: 700; margin: 12px 0 0; }
+.cmp-scroll { overflow-x: auto; }
+.cmp-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; font-variant-numeric: tabular-nums; }
+.cmp-table th, .cmp-table td { padding: 6px; text-align: left; vertical-align: top; }
+.cmp-table thead th { font: 800 0.75rem var(--font-body); color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+.cmp-table tbody th { font-weight: 700; font-size: 0.9rem; width: 34%; }
+.cmp-table tbody > tr > * { background: var(--surface-2); }
+.cmp-table tbody > tr > :first-child { border-radius: 12px 0 0 12px; }
+.cmp-table tbody > tr > :last-child { border-radius: 0 12px 12px 0; }
+.cmp-table td b { display: block; font: 600 1rem var(--font-display); }
+.cmp-ch { display: block; font-size: 0.8rem; font-weight: 700; color: var(--ink-soft); }
+.cmp-words tbody th { width: auto; }
+
 /* ------------------------------------------------------------ settings -- */
 fieldset.card { min-inline-size: 0; }
 legend { font-size: 1.1rem; padding: 0 8px; background: var(--surface); border: 3px solid var(--line); border-radius: 999px; }

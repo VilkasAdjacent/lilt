@@ -20,7 +20,7 @@ The page does not use SharedArrayBuffer or need COOP/COEP headers.
 
 ```sh
 cd app
-npm test               # node --test: DSP recovery on synthetic vowels, WAV, summaries
+npm test               # node --test: DSP recovery on synthetic vowels, WAV, summaries, clip comparison
 npm run report         # prints the actual errors for every case (markdown)
 ```
 
@@ -39,6 +39,8 @@ index.html               all view markup (Home, Practice, Live, Record, Clips, S
 src/main.js              router, theme, session timer + rest nudge, tiny session, mic button
 src/settings.js          settings (localStorage) + target bands
 src/summary.js           per-recording stats (pure)
+src/compare.js           clip comparison (pure): whole-signal analysis, per-clip profile, changes, word matching
+src/norms.js             published formant norms (Elvin 2016, Hillenbrand & Clark 2009), context only
 src/audio/capture.js     getUserMedia (EC/NS/AGC off + warning), AudioWorklet → ScriptProcessor
                          → MediaRecorder fallback, recording (PCM chunks stay on the main thread)
 src/audio/analysis-host.js  runs analysis in a module Web Worker, or on the main thread as a fallback
@@ -47,7 +49,8 @@ src/audio/frame.js       sliding-frame helper shared by both paths
 src/audio/capture-worklet.js
 src/audio/wav.js         16-bit WAV encode/decode (pure)
 src/store/db.js          IndexedDB recordings
-src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser)
+src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser,
+                         compare-view.js: Compare clips inside Clips)
 src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
   feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light)
@@ -90,7 +93,15 @@ For WASM libraries (essentia.js, aubio), do the async init before registering, a
 - **Where to see it:** *Settings → Analysis engines* says which path is in use, and `lilt.mic.analysisMode` is `'worker'` or `'main'`.
 - **Unchanged:** recording, WAV export and IndexedDB stay on the main thread.
 
-## Known limitations
+## Comparing clips
+
+*Clips → Compare clips* is the in-app counterpart of `analysis/compare.py`. Pick two to four saved clips, or add local files (WAV everywhere; other formats if the browser's `decodeAudioData` can read them). Files are decoded in the page and never uploaded or stored.
+
+- **Same engines for every clip.** Each clip's audio is decoded and re-analysed with the current engines (`analyzeSamples` in `compare.js`: the live `createAnalyzer` + sliding frame, 2048/1024), pulled in ~30 ms slices so the page stays responsive. Results are cached per clip and engine choice for the visit. A saved clip the browser can't decode falls back to its stored trace (no F3 or H1–H2*).
+- **What's shown,** each against the earliest clip: pitch median, 5th and 95th percentiles (change in semitones), 5–95 % range and SD in semitones, time in your bands; F1/F2/F3 medians over voiced frames (change in %); weight median, loud-and-light fraction, H1–H2* and LTAS tilt (dB). Changes under a small threshold read "about the same". Context lines give the target bands and the published women/men formant ratios (Elvin et al. 2016 AusE, Hillenbrand & Clark 2009).
+- **Word by word** (first vs last clip): utterances come from the Practice segmenter. A reading of the hVd list (18 words, or the 11 monophthongs, any number of times through) pairs by word, with the median over repeats; otherwise clips with the same word count (≤ 24) pair in order.
+- **Not ported from compare.py / run.py:** CPPS, H1–A3*, VTL, the glide and sustained-vowel tasks, and the DP alignment that tolerates a skipped hVd word. A skipped or extra word shifts the labels after it.
+
 
 - **Why lpc12 is the default, not lpc10.** lpc10 reproduces Praat on real recordings (research/library_comparison.md). On this app's noise-free synthetic grid it misses F2/F3 on all 64 cases, because a spare pole lands between F1 and F2. With a noise floor it passes most male cases, but female vowels still fail. lpc12 passes 60 of 64. Numbers are in `test/README.md`. Check lpc10 on real female speech. lpc10 is selectable in Settings.
 - LPC F1 locks onto a harmonic at high F0, for every method. It is biased toward 2·F0 on close vowels (ee/oo) from F0 ≈ 180 Hz, and the UI marks F1 "≈" above 200 Hz. See `test/README.md`.
