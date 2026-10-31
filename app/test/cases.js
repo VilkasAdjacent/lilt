@@ -2,9 +2,10 @@
 
 import { synthVowel, VOWELS, mulberry32 } from './synth.js';
 import { createAnalyzer, registry, defaultChoice } from '../src/analysis/index.js';
+import * as pitch from '../src/analysis/pitch.js';
 
 /** Formant implementations every formant test runs against. */
-export const FORMANT_IMPLS = Object.keys(registry.formants); // ['lpc10' (default), 'lpc12']
+export const FORMANT_IMPLS = Object.keys(registry.formants);
 export const DEFAULT_FORMANTS = defaultChoice.formants;
 
 export const FRAME = 2048; // what the app uses at 48 kHz (~43 ms)
@@ -29,6 +30,7 @@ export const TOL = {
   f0Cents: 10,
   formantLow: (F) => Math.max(0.05 * F, 60),   // F0 <= 200 Hz
   formantHigh: (F) => Math.max(0.10 * F, 100), // 200 < F0 <= 300 Hz (LPC degrades)
+  f1HighF0: (F) => Math.max(0.05 * F, 60),     // F1 alone at F0 180-300 Hz: the low-F0 band, not loosened
 };
 
 export const F0_GRID = [90, 100, 110, 120, 135, 150, 165, 180, 200, 220, 250, 275, 300];
@@ -36,6 +38,12 @@ export const FORMANT_F0 = {
   male: { low: [90, 100, 120, 150, 180, 200], high: [220, 250] },
   female: { low: [150, 165, 180, 200], high: [220, 250, 275, 300] },
 };
+
+/** F1-only grid at high F0, where LPC F1 locks onto a harmonic. */
+export const F1_HIGH_F0 = { male: [180, 200, 220, 250], female: [180, 200, 220, 250, 275, 300] };
+export const f1HighCases = () =>
+  Object.entries(F1_HIGH_F0).flatMap(([sex, f0s]) =>
+    Object.keys(VOWELS[sex]).flatMap((vowel) => f0s.map((f0) => ({ sex, vowel, f0 }))));
 
 /** Median F0 over frames and worst per-frame error, in cents. */
 export function measureF0({ f0, sex = 'female', vowel = 'had', fs = 48000, ...rest }) {
@@ -69,7 +77,8 @@ export function measureFormants({ f0, sex, vowel, fs = 48000, impl = DEFAULT_FOR
   let x = synthVowel({ f0, formants: VOWELS[sex][vowel], fs, dur: 0.6, ...rest });
   if (Number.isFinite(snr)) x = addNoise(x, snr);
   const frame = Math.round((FRAME * fs) / 48000);
-  const ests = overFrames(x, fs, (fr) => F.estimate(fr, fs, opts), frame);
+  // Each frame gets the F0 the app would give it: pitchy on the same frame.
+  const ests = overFrames(x, fs, (fr) => F.estimate(fr, fs, { f0: pitch.estimate(fr, fs).f0, ...opts }), frame);
   const got = [0, 1, 2].map((i) => median(ests.map((e) => (e ? [e.f1, e.f2, e.f3][i] : NaN))));
   const errHz = got.map((g, i) => g - truth[i]);
   return { truth, got, errHz, errPct: errHz.map((e, i) => (100 * e) / truth[i]) };

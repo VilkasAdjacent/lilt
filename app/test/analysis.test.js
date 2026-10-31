@@ -4,10 +4,12 @@ import assert from 'node:assert/strict';
 
 import { synthVowel, VOWELS, mulberry32 } from './synth.js';
 import {
-  TOL, F0_GRID, measureF0, measureFormants, formantCases, overFrames, median, FORMANT_IMPLS,
+  TOL, F0_GRID, measureF0, measureFormants, formantCases, f1HighCases, overFrames, median, FORMANT_IMPLS,
 } from './cases.js';
 import { createAnalyzer, defaultChoice, normalizeChoice } from '../src/analysis/index.js';
 import * as lpc10 from '../src/analysis/formants-lpc10.js';
+import * as dap from '../src/analysis/formants-dap.js';
+import { lpcToResonances } from '../src/analysis/lpc.js';
 import * as weight from '../src/analysis/weight.js';
 import * as pitch from '../src/analysis/pitch.js';
 import { dbfs } from '../src/analysis/dsp.js';
@@ -72,8 +74,24 @@ const KNOWN_FAIL = {
     // High F0, sparse harmonics: a spurious pole between F2 and F3 is picked as F3.
     'female/hard/275',
   ]),
+  // Same spurious pole between F1 and F2 as lpc12 (poles ~750, 1270, 1700 Hz vs 920 / 1500).
+  dap: new Set(['female/hard/275']),
 };
-const KNOWN_FAIL_441 = { lpc10: true, lpc12: false };
+// F1 alone at F0 180-300 Hz under the low-F0 tolerance. Autocorrelation LPC
+// (lpc10, lpc12) pulls a low F1 toward a harmonic; dap fits only the harmonics.
+const LPC_F1_HIGH_MISS = [
+  'male/heed/180', 'male/heed/200', 'male/heed/220', 'male/whod/200', 'male/whod/220', 'male/whod/250',
+  'female/heed/220', 'female/heed/250', 'female/had/250', 'female/hard/275',
+  'female/whod/220', 'female/whod/250', 'female/whod/275',
+];
+const KNOWN_F1_HIGH_MISS = {
+  lpc10: new Set(LPC_F1_HIGH_MISS),
+  lpc12: new Set(LPC_F1_HIGH_MISS),
+  // Close vowels: dap reads F1 about +50 Hz high (the glottal source's H2 > H1 is
+  // fitted as a higher F1). female hard 275: an extra pole between F1 and F2.
+  dap: new Set(['female/heed/275', 'female/hard/275', 'female/whod/220', 'female/whod/300']),
+};
+const KNOWN_FAIL_441 = { lpc10: true, lpc12: false, dap: false };
 
 for (const impl of FORMANT_IMPLS) {
   for (const c of formantCases()) {
@@ -86,6 +104,15 @@ for (const impl of FORMANT_IMPLS) {
         assert.ok(Math.abs(r.errHz[i]) <= tol(F),
           `F${i + 1}: truth ${F}, got ${r.got[i].toFixed(0)} (${r.errPct[i].toFixed(1)}%)`);
       });
+    });
+  }
+
+  for (const c of f1HighCases()) {
+    const key = `${c.sex}/${c.vowel}/${c.f0}`;
+    test(`F1 at high F0 [${impl}] ${key} ±max(5%,60Hz)`, { todo: KNOWN_F1_HIGH_MISS[impl]?.has(key) ? `known ${impl} miss` : false }, () => {
+      const r = measureFormants({ ...c, impl });
+      assert.ok(Math.abs(r.errHz[0]) <= TOL.f1HighF0(r.truth[0]),
+        `F1: truth ${r.truth[0]}, got ${r.got[0].toFixed(0)} (${r.errPct[0].toFixed(1)}%)`);
     });
   }
 
@@ -119,6 +146,27 @@ test('lpc10 matches bench/lib/lpc.mjs within 2 Hz (F1-F3, clean vowels)', { skip
     }
   }
   assert.ok(worst <= 2, `worst |app - bench| = ${worst.toFixed(2)} Hz`);
+});
+
+// The DAP fixed point must recover an all-pole envelope exactly from its
+// samples at sparse harmonics. Ordinary LPC on the same points (the iteration's
+// starting point) is biased: that bias is what the iterations remove.
+test('dapFit recovers an exact all-pole envelope from harmonics of 250 Hz (F1-F3 within 1 Hz)', () => {
+  const fs = 12000, f0 = 250;
+  const formants = VOWELS.female.heed;
+  const resonatorPower = (f, { F, B }) => {
+    const r = Math.exp((-Math.PI * B) / fs), th = (2 * Math.PI * F) / fs, w = (2 * Math.PI * f) / fs;
+    return 1 / (Math.hypot(1 - r * Math.cos(th - w), r * Math.sin(th - w)) * Math.hypot(1 - r * Math.cos(th + w), r * Math.sin(th + w))) ** 2;
+  };
+  const freqs = Array.from({ length: 21 }, (_, i) => (i + 1) * f0);
+  const w = Float64Array.from(freqs, (f) => (2 * Math.PI * f) / fs);
+  const P = Float64Array.from(freqs, (f) => formants.reduce((p, fm) => p * resonatorPower(f, fm), 1));
+  const firstThree = (a) => lpcToResonances(a, fs).filter((c) => c.bw < 500).slice(0, 3).map((c) => c.freq);
+  const errs = (a) => firstThree(a).map((f, i) => Math.abs(f - formants[i].F));
+  const dapErr = Math.max(...errs(dap.dapFit(w, P, 10, { maxIter: 200, tol: 1e-12 })));
+  const lpcErr = Math.max(...errs(dap.dapFit(w, P, 10, { maxIter: 0 })));
+  assert.ok(dapErr <= 1, `DAP worst ${dapErr.toFixed(2)} Hz`);
+  assert.ok(lpcErr > 10, `LPC on the same harmonics should be biased, worst ${lpcErr.toFixed(2)} Hz`);
 });
 
 test('f1Approx is set only above F0 200 Hz', () => {

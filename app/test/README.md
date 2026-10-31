@@ -1,6 +1,6 @@
 # Analysis tests
 
-Run `npm test` (or plain `node --test`) from `app/`. Run `npm run report` (`node scripts/report.js`) to print every case's **actual** error for every formant implementation. Options: `--impl lpc10|lpc12` runs one implementation, `--snr 30` adds white noise to the formant cases, and `--order N` tries a different LPC order for lpc12.
+Run `npm test` (or plain `node --test`) from `app/`. Run `npm run report` (`node scripts/report.js`) to print every case's **actual** error for every formant implementation, plus formant time per frame. Options: `--impl lpc10|lpc12|dap` runs one implementation, `--snr 30` adds white noise to the formant cases, `--breathiness 0.5` uses a breathier source for them, `--sweep` summarises F1 over F0 180–300 Hz in 10 Hz steps for all 8 vowel sets instead of the test grid, and `--order N` tries a different LPC order for lpc12.
 
 All signals come from `synth.js`. That's a Rosenberg glottal pulse at a known F0, with optional jitter, shimmer and a `breathiness` control. Breathiness raises the open quotient, makes the pulse more symmetric, adds extra tilt and adds aspiration noise. The pulse goes through Klatt cascade resonators F1–F5 with known frequencies and bandwidths (B = 50 + 0.06·F). The formant sets are rough AusE heed/had/hard/who'd values for male-like and female-like voices. They are **synthetic truth, not norms**. Frames are 2048 samples (43 ms at 48 kHz), hop 1024, and the result is the median over a 0.5–0.6 s vowel.
 
@@ -10,9 +10,10 @@ All signals come from `synth.js`. That's a Rosenberg glottal pulse at a known F0
 |---|---|---|
 | pitch | `pitchy`: MPM key threshold k = 0.92, voicing gate clarity ≥ **0.8**, sub-60 Hz guard | – |
 | formants | `lpc10` (`formants-lpc10.js`, selectable): port of `bench/lib/lpc.mjs`. Resample to 10 kHz (Kaiser sinc), pre-emphasis from 50 Hz, Praat Gaussian window (50 ms), 10 poles, Durand–Kerner roots + Newton polish, no bandwidth filter | **`lpc12`** (`formants.js`, DEFAULT): the original tracker. Decimate by 4, 0.97 pre-emphasis, Hamming, 12 poles, BW < 500 Hz |
+| formants | | `dap` (`formants-dap.js`, selectable): discrete all-pole modelling (El-Jaroudi & Makhoul 1991). Harmonic peaks at k·F0 up to 5.4 kHz from an 8192-point FFT, 0.97 pre-emphasis applied to them, a 12-pole Itakura–Saito fit to those points only (model rate 12 kHz, ≤ 40 fixed-point iterations), refit with 10 poles if any pole is narrower than 25 Hz, BW < 500 Hz |
 | weight | `h1h2`: H1–H2 and tilt ported from `bench/lib/tilt.mjs` | – |
 
-Every formant test runs once per registered implementation (`formants [lpc10] …`, `formants [lpc12] …`) with the same fixed tolerances.
+Every formant test runs once per registered implementation (`formants [lpc10] …`, `formants [lpc12] …`, `formants [dap] …`) with the same fixed tolerances. Each frame gets the F0 that pitchy measures on that frame, as in the app; only `dap` uses it.
 
 ## Tolerances (fixed, not tuned to pass)
 
@@ -22,6 +23,8 @@ Every formant test runs once per registered implementation (`formants [lpc10] �
 | F0, 1 % jitter + 5 % shimmer + breathiness 0.5 | median within ±10 cents, ≥90 % voiced | 100, 150, 200, 250 Hz |
 | F1–F3, F0 ≤ 200 Hz | ±max(5 %, 60 Hz) | male F0 90–200, female 150–200 |
 | F1–F3, 200 < F0 ≤ 300 Hz (looser: harmonics are sparse, so LPC is biased) | ±max(10 %, 100 Hz) | male 220–250, female 220–300 |
+| F1 alone at high F0 (the low-F0 band, not loosened) | ±max(5 %, 60 Hz) | male 180–250, female 180–300, all 4 vowels each (40 cases) |
+| DAP fit on exact all-pole samples at harmonics of 250 Hz (female heed envelope, 10 poles) | F1–F3 within 1 Hz; plain LPC on the same points must miss by > 10 Hz | |
 | lpc10 port fidelity | F1–F3 within 2 Hz of `bench/lib/lpc.mjs` (whole-signal resample) | 4 clean vowels × 3 frames |
 | `f1Approx` flag | off at F0 150 and 190 Hz, on at 220 and 280 Hz | |
 | H1–H2 vs breathiness 0 → 1 | strictly increasing | 4 voice/vowel/F0 combos |
@@ -32,7 +35,7 @@ Every formant test runs once per registered implementation (`formants [lpc10] �
 
 ## Results (current code)
 
-`npm test`: 177 tests, **108 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
+`npm test`: 366 tests, **266 pass, 0 fail, 100 todo**. The todos are 65 + 13 for lpc10, 4 + 13 for lpc12 and 1 + 4 for dap (formant grid + F1 at high F0); see below.
 
 ### F0
 
@@ -81,6 +84,57 @@ Port fidelity is tested separately. `lpc10` matches `bench/lib/lpc.mjs` within 2
 - The cause is the classic one: autocorrelation LPC fits the harmonic line spectrum, so a low F1 gets pulled toward 2·F0. The research found that every method, Praat included, does this above about 220 Hz.
 - The analyzer now sets `f1Approx` when F0 > 200 Hz (`F1_APPROX_ABOVE_F0` in `analysis/index.js`). The Live view then greys F1 out and shows it with "≈".
 
+### F1 at high F0: dap vs lpc12
+
+The `F1 at high F0` tests check F1 alone at F0 180–300 Hz against the *low-F0* band, ±max(5 %, 60 Hz). lpc12 and lpc10 miss the same 13 of 40; dap misses 4. All misses are `todo`.
+
+**Test grid (40 cases), |F1 error|:**
+
+| condition | lpc12 in tolerance | dap in tolerance | lpc12 close vowels (heed, who'd): median / max | dap close: median / max | lpc12 open (had, hard): median / max | dap open: median / max |
+|---|---|---|---|---|---|---|
+| noise-free | 27 | **36** | 67 / 98 Hz | **54 / 65 Hz** | 25 / 110 Hz | **16** / 170 Hz |
+| SNR 30 dB | 26 | **30** | 77 / 105 Hz | **59 / 89 Hz** | 24 / 99 Hz | **13** / 131 Hz |
+| SNR 20 dB | 25 | **29** | 76 / 123 Hz | **61 / 104 Hz** | 26 / 80 Hz | **15 / 61 Hz** |
+| breathiness 0.5 | **37** | 36 | 31 / 77 Hz | **14 / 34 Hz** | 30 / 153 Hz | 28 / 191 Hz |
+
+**Sweep** (`--sweep`: F0 180, 190 … 300 × all 8 vowel sets, 104 cases), because a coarse F0 grid can land LPC on a lucky harmonic:
+
+| condition | lpc12 in tolerance | dap in tolerance | close: lpc12 median / p90 / max | close: dap | open: lpc12 | open: dap |
+|---|---|---|---|---|---|---|
+| noise-free | 69 | **91** | 63 / 92 / 102 Hz | **54 / 62 / 72 Hz** | 25 / 67 / 117 Hz | **16 / 49** / 168 Hz |
+| SNR 30 dB | 69 | **79** | 68 / 99 / 108 Hz | **56 / 81 / 89 Hz** | 24 / 59 / 106 Hz | **12 / 38** / 139 Hz |
+| breathiness 0.5 | 86 | **89** | 27 / 58 / 77 Hz | **17 / 34 / 45 Hz** | **32 / 98 / 169 Hz** | 42 / 111 / 195 Hz |
+
+**F2/F3 at F0 180–300 Hz** (test grid, median |error|): lpc12 1.1 / 0.8 %, dap 1.0 / 0.8 % noise-free; 1.4 / 0.7 % vs 1.3 / 0.8 % at SNR 30; 0.9 / 0.7 % vs 0.8 / 0.5 % breathy.
+
+**Whole 64-case formant grid** (F1–F3, the usual tolerances):
+
+| condition | lpc12 pass: male, female | dap pass: male, female | lpc12 median abs err F1/F2/F3 | dap median abs err F1/F2/F3 |
+|---|---|---|---|---|
+| noise-free | 60: 29/32, 31/32 | **63**: 32/32, 31/32 | 3.6 / 0.9 / 0.7 % | 3.7 / 1.0 / 0.7 % |
+| SNR 40 dB | 56: 27/32, 29/32 | **59**: 29/32, 30/32 | 3.4 / 0.9 / 0.7 % | 2.4 / 0.8 / 0.8 % |
+| SNR 30 dB | 55: 25/32, 30/32 | 56: 25/32, 31/32 | 3.2 / 1.0 / 0.7 % | 2.3 / 1.0 / 0.7 % |
+| SNR 20 dB | 39: 16/32, 23/32 | 40: 15/32, 25/32 | 3.5 / 1.1 / 1.3 % | 2.9 / 1.6 / 1.2 % |
+
+dap's one noise-free miss is lpc12's too: female hard @ 275 (F1 −170 Hz, F2 −231 Hz, F3 −1150 Hz; poles near 750, 1270, 1700 Hz instead of 920 / 1500). At SNR 30 both miss male who'd F3 at low F0 (dap picks the 5 kHz pole, +2.7 kHz; lpc12 +1.5 kHz). At SNR 20, female heed @ 180 has no third resonance under 500 Hz bandwidth in any frame, so dap's F3 is NaN there.
+
+**Low F0 (no regression on the whole, but not better either).** Sweep F0 90–175 Hz in 5 Hz steps, 144 cases: |F1| median / p90 / max is 13 / 31 / 63 Hz for lpc12 and 10 / 34 / 49 Hz for dap noise-free, 11 / 28 / 69 vs 9 / 24 / 77 Hz at SNR 30, and 18 / 34 / 46 vs 21 / 34 / 45 Hz breathy. On the test grid, dap is worse on male hard at 90–150 Hz (F1 −31 to −40 Hz vs −3 to −27 Hz) and on male heed @ 150 (+34 vs +17 Hz). Its worst F1 for F0 ≤ 200 is 20.2 % (male heed @ 200), against lpc12's 28.6 %.
+
+**Why dap still reads close-vowel F1 about +50 Hz high.** On *exact* all-pole samples at the harmonics, the DAP fit recovers F1–F3 to within 1 Hz (that's the unit test; plain LPC on the same points is 35 Hz off on F3). The harmonic amplitudes it measures on the synth match the analytic envelope to 0.01 dB. So the remaining bias comes from the source, not from the fit. The Rosenberg pulse has H2 about 1.7 dB above H1, and after pre-emphasis that rise is about 7.5 dB. With F0 above F1/2, the only evidence for F1 is the relative level of H1, H2 and H3, so a strong H2 reads as a higher F1. A breathier source (H1 dominant) shrinks the bias to about +16 Hz. On real voices this depends on voice quality, and no harmonic-only method can fully separate the two. Lowering pre-emphasis to 0.8–0.9 cut the noise-free close-vowel bias to +27 to +41 Hz, but it made open vowels worse and would be tuning to this synth. So it stays at 0.97, the same as lpc12.
+
+**Order fallback.** DAP only sees the spectrum at the harmonics, so it can put a pole almost on the unit circle between two harmonics at no cost. That's the method's known failure. When any 12-pole root is narrower than 25 Hz, dap refits with 10 poles. On the sweep, the fallback brought open vowels from median / p90 30 / 84 Hz to 16 / 49 Hz, and it moved close vowels from 45 / 57 Hz to 54 / 62 Hz. Without it the breathy open-vowel p90 was 139 Hz. Raising the cap from 40 iterations to 80 or 200 barely changes anything (close-vowel median 54 → 55 Hz).
+
+**Time per frame** (Node 24, this desktop, 2048 samples at 48 kHz, `npm run report`): lpc12 0.14 ms, lpc10 0.21 ms, dap 0.49 ms; on other vowels and F0s it measured 0.30–0.32 ms. A phone is maybe 3–5× slower, so about 1–2.5 ms, which fits the few-ms budget at 47 frames/s.
+
+**Decision: dap stays selectable, not the default; `f1Approx` stays at 200 Hz.**
+- dap clearly wins the problem it was built for: close-vowel F1 at F0 ≥ 220 Hz, where lpc12 is pulled to the 2nd harmonic. It also wins the in-tolerance count in every condition except breathy, where they are about even.
+- But it is not a clear win overall:
+  - Female heed and who'd at 180–200 Hz, around where the user is training now, read better on lpc12: +5 / +44 Hz vs +28 / +60 Hz (heed), −11 / +24 vs +15 / +51 Hz (who'd).
+  - Open vowels at high F0 have worse outliers (max 168–195 Hz vs 117–169 Hz).
+  - Breathy open vowels are worse on median.
+  - Close-vowel F1 is still biased about +50 Hz, so the "≈" flag remains honest above 200 Hz.
+- All of this is synthetic. Pick it in *Settings → Analysis engines* to compare on real speech. A hybrid (dap only above some F0) didn't have a clean crossover on this grid, so it isn't wired.
+
 ### Weight and tilt
 
 These are ported from `bench/lib/tilt.mjs`:
@@ -119,3 +173,8 @@ At these F0s the extra poles get spent modelling individual harmonics, so order 
 ## Caveat
 
 The synthetic source is idealised. The cascade has no subglottal coupling, the noise model is simple, and there is no room or mic. Passing here is necessary but not sufficient. The research agent's real-recording benchmark (`bench/`) is the real test, and on it lpc10 is the better choice.
+
+For `dap` in particular:
+- Its remaining close-vowel F1 bias depends on the source's H1–H2. The synth has a single Rosenberg shape, so real voices may come out better or worse.
+- It trusts the frame's F0. With an octave error from pitchy, it fits the wrong points.
+- It has not been run on `bench/` or on real recordings yet.

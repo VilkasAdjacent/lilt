@@ -11,12 +11,13 @@
 import pitchy from './pitch.js';
 import lpc10 from './formants-lpc10.js';
 import lpc12 from './formants.js';
+import dap from './formants-dap.js';
 import h1h2, { tiltDb } from './weight.js';
 import { dbfs } from './dsp.js';
 
 export const registry = {
   pitch: { pitchy },
-  formants: { lpc10, lpc12 },
+  formants: { lpc10, lpc12, dap },
   weight: { h1h2 },
 };
 
