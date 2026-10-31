@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
     "serve": "npx serve .",
-    "report": "node scripts/report.js"
+    "report": "node scripts/report.js",
+    "offline-list": "node scripts/offline-list.js"
   }
 }

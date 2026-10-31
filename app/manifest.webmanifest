@@ -1,0 +1,13 @@
+{
+  "name": "Lilt",
+  "short_name": "Lilt",
+  "description": "A gentle, private voice practice buddy. Everything stays on your device.",
+  "start_url": "./#/home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff3fa",
+  "theme_color": "#fff3fa",
+  "icons": [
+    { "src": "src/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

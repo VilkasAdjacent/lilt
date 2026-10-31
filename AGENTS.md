@@ -13,7 +13,7 @@ This repo is a personal voice-training app ("Lilt", a static GitHub Pages site i
 
 - **Never commit** audio, `recordings/` (except `RECORDING_SCRIPT.md`), `research/`, `analysis/results/`, `analysis/cache/` or bench tracks. `.gitignore` enforces this; don't weaken it.
 - **Committed files stay free of personal details:** no health or intake details in code, comments, commit messages or these notes.
-- **Pages publishes only** `app/index.html`, `app/src/` and `app/vendor/`, via `.github/workflows/pages.yml`. Never switch it to "deploy from a branch".
+- **Pages publishes only** `app/index.html`, `app/sw.js`, `app/manifest.webmanifest`, `app/src/` and `app/vendor/`, via `.github/workflows/pages.yml`. Never switch it to "deploy from a branch".
 
 ## Habits
 

@@ -16,6 +16,10 @@ There's no build step. It's plain ES modules, and the dependencies are vendored 
 
 The page does not use SharedArrayBuffer or need COOP/COEP headers.
 
+## Offline
+
+After the first online visit, the service worker (`sw.js`) has every published file cached, so the app opens and works offline. Online it always fetches first, so a deploy shows up on the next load and never mixes old and new modules. The precache list is `src/offline.json`. After adding, removing or renaming a file in `src/` or `vendor/`, run `npm run offline-list`; a test fails until the list matches.
+
 ## Test
 
 ```sh
@@ -28,7 +32,7 @@ Tolerances and current results are in [`test/README.md`](test/README.md). Node 2
 
 ## Deploy to GitHub Pages
 
-Deployment is handled by `.github/workflows/pages.yml` at the repo root. See the root `README.md` for the one-time setup. The workflow runs `npm test`, then publishes **only** `index.html`, `src/` and `vendor/`. All paths are relative and routing uses the hash, so the app works under `https://<user>.github.io/<repo>/`.
+Deployment is handled by `.github/workflows/pages.yml` at the repo root. See the root `README.md` for the one-time setup. The workflow runs `npm test`, then publishes **only** `index.html`, `sw.js`, `manifest.webmanifest`, `src/` and `vendor/`. All paths are relative and routing uses the hash, so the app works under `https://<user>.github.io/<repo>/`.
 
 Don't use "Deploy from a branch". It would publish the whole repo, including `research/`.
 
@@ -36,6 +40,8 @@ Don't use "Deploy from a branch". It would publish the whole repo, including `re
 
 ```
 index.html               all view markup (Home, Practice, Live, Record, Clips, Settings, About)
+sw.js                    offline support: precaches src/offline.json, then network first with the cache as fallback
+manifest.webmanifest     install metadata (icon: src/icon.svg)
 src/main.js              router, theme, session timer + rest nudge, tiny session, mic button
 src/settings.js          settings (localStorage) + target bands
 src/summary.js           per-recording stats (pure)
@@ -156,5 +162,4 @@ Exercises with `babble: true` show a *Start the café* button and a quiet → bu
 - Analysis runs about 47 frames/s (hop 1024 at 48 kHz) in the Worker. The research estimates ≈ 3.3 ms per frame, phone-scaled, for this pipeline.
 - The tilt measure changed (now dB, 1–4 kHz vs 50–1000 Hz, not dB/octave), so weight scores from before this change aren't comparable with new ones.
 - The creak detector is only checked on synthetic fry, so it needs listening checks on real speech. Synthetic numbers are in `test/README.md`. Creak at 70–100 Hz that pitchy still reads as periodic (likely for a higher modal voice) is not detected by design, so phrase-final creak from a ~200 Hz voice may be missed.
-- No offline service worker yet.
 - The café has only been checked numerically and in headless Chrome, not listened to. Whether it reads as a busy room, and how much a phone speaker leaks into the mic, still need checking on a real device.

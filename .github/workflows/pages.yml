@@ -38,7 +38,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp app/index.html _site/
+          cp app/index.html app/sw.js app/manifest.webmanifest _site/
           cp -r app/src app/vendor _site/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5

@@ -196,5 +196,8 @@ for (const m of Object.values(modules)) m.init && m.init({ toast, startMic, stop
 window.addEventListener('hashchange', route);
 route();
 
+// Offline support. A failed registration (file://, private modes) just means online only.
+navigator.serviceWorker?.register('sw.js').catch(() => {});
+
 // Debug handle for the console / headless checks (no secrets in here).
 window.lilt = { mic, settings };
