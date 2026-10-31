@@ -55,6 +55,35 @@ export const EXERCISES = [
     ],
   },
 
+  {
+    id: 'straw-tune', kind: 'warmup', title: 'Straw tune', watch: 'pitch',
+    blurb: 'Hum a little tune through a straw. Warm-up and pitch practice in one.',
+    steps: [
+      'Hum any simple tune through a straw: "Happy Birthday" or a nursery rhyme.',
+      'Keep it soft and easy, with your cheeks relaxed.',
+      'Once through is enough. Twice if it was fun.',
+    ],
+  },
+  {
+    id: 'vvv-slide', kind: 'warmup', title: '"Vvv" slides', watch: 'pitch',
+    blurb: 'No straw handy? A buzzy "vvv" does a similar job.',
+    steps: [
+      'Rest your top teeth lightly on your bottom lip and make a buzzy "vvv".',
+      'Slide it up and down like a siren, keeping the buzz going.',
+      'Feel the tickle on your lip. That buzz means your voice is working easily.',
+    ],
+  },
+  {
+    id: 'loosen-up', kind: 'warmup', title: 'Shoulders, jaw, tongue', watch: null,
+    blurb: 'Thirty seconds of letting go before you make a sound.',
+    steps: [
+      'Roll your shoulders back a few times and let them drop.',
+      'Let your jaw hang loose and gently wobble it side to side.',
+      'Stick your tongue out, then let it rest behind your bottom teeth.',
+      'A slow breath in through your nose, and a sigh out.',
+    ],
+  },
+
   // -------------------------------------------------------------- resonance
   {
     id: 'two-sizes', kind: 'resonance', title: 'Same note, two sizes', watch: 'resonance', score: { kind: 'contrast' },
@@ -92,6 +121,66 @@ export const EXERCISES = [
       'Make a soft "awww" like you just saw a tiny puppy. Feel your throat lift a little.',
       'Keep that lifted, small feeling and say "hi" and "hello" at a normal pitch.',
       'Small, not squeezed. If it feels tight, let it settle a bit.',
+    ],
+  },
+
+  {
+    id: 'smile-or-small', kind: 'resonance', title: 'Smile-y or small mouth', watch: 'resonance', score: { kind: 'contrast' },
+    blurb: 'Two ways to make the space smaller. See which one suits your voice.',
+    steps: [
+      'Say "hey" at your everyday pitch.',
+      'Now a smile-y "hey": lips spread a little, as if you\'re pleased to see someone.',
+      'Now a small-mouth "hey": as if the space inside your mouth shrank a bit.',
+      'Go back and forth between your everyday one and whichever felt easier. Pitch stays put.',
+    ],
+  },
+  {
+    id: 'whisper-siren', kind: 'resonance', title: 'Whisper siren', watch: null,
+    blurb: 'A whispered "ee" siren lets you hear your throat and tongue lift, with no pitch involved.',
+    steps: [
+      'Whisper "eee" and slide it up like a siren. The whisper sounds higher as your throat lifts.',
+      'Stop near the top and notice the small, lifted feeling.',
+      'Keep that feeling and say "eat" out loud at your normal pitch.',
+      'Only a few seconds of whispering at a time. It\'s for noticing, not for long stretches.',
+    ],
+  },
+  {
+    id: 'bright-hum', kind: 'resonance', title: 'Bright hum', watch: 'resonance',
+    blurb: 'Hum "ng" with a small, bright feeling, then open it into words.',
+    steps: [
+      'Hum "ng", like the end of "sing", with the back of your tongue up.',
+      'Make it feel small and bright, as if the sound sits just behind your nose.',
+      'Open it into "ngee", then "ngyeah", keeping the same bright place.',
+      'Then plain "yeah" and "easy", still bright.',
+    ],
+  },
+  {
+    id: 'vowel-word-phrase', kind: 'resonance', title: 'Vowel, word, phrase', watch: 'resonance',
+    blurb: 'Carry a bright vowel into a word, then into a sentence.',
+    steps: [
+      'Say a bright, slightly smiley "ee".',
+      'Keep the same brightness and say "eat", then "easy".',
+      'Then the whole thing: "it\'s easy".',
+      'If the brightness drops off in the sentence, go back one step and try again.',
+    ],
+  },
+  {
+    id: 'oo-in-words', kind: 'resonance', title: 'Less pout, in words', watch: 'resonance',
+    blurb: 'Take the softer "oo" into everyday words.',
+    steps: [
+      'Say "who\'d" with your lips only a little rounded, tongue forward.',
+      'Keep that and say "soon", "too", "do you?"',
+      'Then a phrase: "who\'s coming too?"',
+      'It should still sound like your own "oo", just a touch brighter.',
+    ],
+  },
+  {
+    id: 'bright-pairs', kind: 'resonance', title: 'Bright pairs', watch: 'resonance', score: { kind: 'contrast' },
+    blurb: 'Everyday words twice each: as usual, then a bit brighter.',
+    steps: [
+      'Say "day" your usual way, then a bit smaller and brighter on the same pitch.',
+      'Do the same with "no", then "hi", then "see".',
+      'Two of each, same note. F2 should move, pitch shouldn\'t.',
     ],
   },
 
@@ -145,6 +234,37 @@ export const EXERCISES = [
     ],
   },
 
+  {
+    id: 'tiny-steps', kind: 'pitch', title: 'Yes, yes, yes', watch: 'pitch', score: { kind: 'step', st: [0.5, 1.75] },
+    blurb: 'A spoken ladder: each "yes" one tiny step higher than the last.',
+    steps: [
+      'Say "yes" at your normal pitch.',
+      'Say it again, just a tiny step higher. Then another tiny step.',
+      'Five or so steps up, then walk back down the same way.',
+      'Tiny is the point. If one jumps, make the next one smaller.',
+    ],
+  },
+  {
+    id: 'halfway-hi', kind: 'pitch', title: 'Halfway "hi"', watch: 'pitch', score: { kind: 'step', st: [3.5, 7.5] },
+    blurb: 'Between your everyday "hi" and a squeaky one there\'s a middle. Let\'s find it.',
+    steps: [
+      'Say "hi" at your everyday pitch.',
+      'Now a very high, cheery "hi!", just to hear where the top is.',
+      'Now a "hi" about halfway between the two.',
+      'Alternate your everyday "hi" and the halfway one. The step should feel like a comfy middle size.',
+    ],
+  },
+  {
+    id: 'glide-into-words', kind: 'pitch', title: 'Glide into words', watch: 'pitch', score: { kind: 'band' },
+    blurb: 'Slide up into your band on an "mmm", land there, and start talking.',
+    steps: [
+      'Hum "mmm" low and slide up until you reach a comfy note in your band.',
+      'Land on it and say "hi, how\'s it going?" right there.',
+      'Do it again, with a shorter slide each time.',
+      'Last time, skip the slide and just start on the note.',
+    ],
+  },
+
   // ----------------------------------------------------------- loud & light
   {
     id: 'straw-louder', kind: 'loudlight', title: 'Straw, getting louder', watch: 'loudlight', score: { kind: 'loudlight' },
@@ -173,6 +293,39 @@ export const EXERCISES = [
       'Say "hey!" to someone right next to you.',
       'Then to someone across the room, then across a big hall.',
       'Get louder with breath and space, as if the sound comes out of your smile.',
+    ],
+    care: LOUD_CARE,
+  },
+
+  {
+    id: 'straw-to-ah', kind: 'loudlight', title: 'Straw to "ah"', watch: 'loudlight', score: { kind: 'loudlight' },
+    blurb: 'Keep the easy straw feeling as your mouth opens up.',
+    steps: [
+      'Hum through a straw for a few seconds.',
+      'Take it away and say "woo", lips still nearly as small as the straw.',
+      'Open up gradually: "woo", "wah", "ah", a little louder each time.',
+      'Back to the straw if "ah" starts to feel pushed.',
+    ],
+    care: LOUD_CARE,
+  },
+  {
+    id: 'forward-mm-hmm', kind: 'loudlight', title: 'Forward "mm-hmm"', watch: 'loudlight', score: { kind: 'loudlight' },
+    blurb: 'An agreeable "mm-hmm" that gets louder while the buzz stays on your lips.',
+    steps: [
+      'Say "mm-hmm" as if you\'re agreeing with a friend. Feel the buzz on your lips.',
+      'Say it a little louder, keeping the buzz up front.',
+      'Then louder again, as if they\'re across the table in a busy café.',
+      'Then "mm-hmm, yeah!" at that level.',
+    ],
+    care: LOUD_CARE,
+  },
+  {
+    id: 'count-up', kind: 'loudlight', title: 'Count it up', watch: 'loudlight', score: { kind: 'loudlight' },
+    blurb: 'Count to five, a little louder on each number, and stop at the first push.',
+    steps: [
+      'Say "one" at a chatty level.',
+      'Each number a bit louder, from breath and a bright, open mouth.',
+      'The first number that feels pushy is today\'s ceiling. Go back one and repeat it.',
     ],
     care: LOUD_CARE,
   },
@@ -234,6 +387,46 @@ export const EXERCISES = [
     ],
   },
 
+  {
+    id: 'hellos-goodbyes', kind: 'together', title: 'Hellos and goodbyes', watch: 'pitch', score: { kind: 'band' },
+    blurb: 'The little phrases you say most days, bright and a bit up.',
+    steps: [
+      'Hum a note in your band.',
+      'Then: "hi!", "morning!", "how are you?"',
+      'Then: "thanks, see you!", "bye, have a good one!"',
+      'Short and friendly. Whatever comes out is fine.',
+    ],
+  },
+  {
+    id: 'phone-call', kind: 'together', title: 'Pretend phone call', watch: 'pitch', score: { kind: 'band' },
+    blurb: 'On the phone your voice does all the work. Practise the opening lines.',
+    steps: [
+      'Hold your phone up like you\'re on a call.',
+      'Say an opener: "Hi, I\'m calling to make a booking, please."',
+      'Then a couple of replies: "Yes, that works", "Great, thanks so much".',
+      'Bright, a bit up, and unhurried.',
+    ],
+  },
+  {
+    id: 'three-phrases', kind: 'together', title: 'Three phrases for today', watch: 'pitch', score: { kind: 'band' },
+    blurb: 'Pick three things you\'ll actually say today and give them a run-through.',
+    steps: [
+      'Think of three things you might say today, like "can I tap my card?" or "thanks, you too".',
+      'Say each one twice in your practice voice.',
+      'If one comes up for real later, try it. If not, that\'s fine too.',
+    ],
+  },
+  {
+    id: 'counter-chat', kind: 'together', title: 'At the counter', watch: 'loudlight', score: { kind: 'loudlight' },
+    blurb: 'Little shop phrases, a bit louder, as if there\'s music playing.',
+    steps: [
+      'Imagine a shop with music on.',
+      'Say "Hi! Just these, thanks", "No bag, thanks", "Have a good one!"',
+      'Bright and up, louder from breath, not from your throat.',
+    ],
+    care: LOUD_CARE,
+  },
+
   // -------------------------------------------------------------- cool-down
   {
     id: 'hum-down', kind: 'cooldown', title: 'Hum yourself down', watch: null,
@@ -253,17 +446,47 @@ export const EXERCISES = [
       'If the top is missing, crackly or scratchy, your voice is asking for rest. Rest counts too.',
     ],
   },
+  {
+    id: 'falling-sighs', kind: 'cooldown', title: 'Falling sighs', watch: null,
+    blurb: 'Soft "haa" sighs that float down, each one quieter than the last.',
+    steps: [
+      'Breathe in through your nose.',
+      'Sigh out a soft "haa" from a comfy middle note down to low.',
+      'Each sigh a little quieter and slower. Four or five is plenty.',
+    ],
+  },
+  {
+    id: 'straw-wind-down', kind: 'cooldown', title: 'Straw wind-down', watch: 'pitch',
+    blurb: 'Straw slides that get smaller and lower until they stop.',
+    steps: [
+      'Hum through a straw with a few slow slides.',
+      'Make each slide a little smaller and a little lower.',
+      'Finish on a quiet, low hum, then say "okay" in your comfy everyday voice.',
+    ],
+  },
+  {
+    id: 'trill-down', kind: 'cooldown', title: 'Trill back down', watch: null,
+    blurb: 'Lip trills that drift from your band down to your comfy low.',
+    steps: [
+      'A loose "brrrr" lip trill, starting around your practice pitch.',
+      'Let it drift down slowly, like a sigh.',
+      'Three or four, then a sip of water. Nice work.',
+    ],
+  },
 ];
 
 export const parseKind = (kind) => (kind in KINDS ? kind : 'any');
 
 /**
- * A random exercise of the given kind ('any' for all), avoiding the ones in
- * `recent` (oldest first) where the pool allows, and never the latest one twice in a row.
+ * A random item of `pool` (each with an `id`), avoiding the ids in `recent`
+ * (oldest first) where the pool allows, and never the latest one twice in a row.
  */
-export function pickExercise({ kind = 'any', recent = [], random = Math.random } = {}) {
-  const pool = EXERCISES.filter((e) => kind === 'any' || e.kind === kind);
+export function pickAvoiding(pool, { recent = [], random = Math.random } = {}) {
   const latest = recent[recent.length - 1];
   const from = [pool.filter((e) => !recent.includes(e.id)), pool.filter((e) => e.id !== latest), pool].find((p) => p.length);
   return from[Math.floor(random() * from.length)];
 }
+
+/** A random exercise of the given kind ('any' for all), as pickAvoiding chooses. */
+export const pickExercise = ({ kind = 'any', ...opts } = {}) =>
+  pickAvoiding(EXERCISES.filter((e) => kind === 'any' || e.kind === kind), opts);

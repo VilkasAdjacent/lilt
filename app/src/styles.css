@@ -228,6 +228,7 @@ main { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; outline: none; 
 .resonance summary::after { content: '▾'; font-size: 1.4rem; transition: transform 0.2s; }
 .resonance[open] summary::after { transform: rotate(180deg); }
 .resonance summary h2 { margin: 0; }
+.resonance summary h3 { margin: 0; font: 600 1rem var(--font-display); }
 .formants { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
 .formants > div { background: var(--surface-2); border-radius: 14px; padding: 8px; text-align: center; font: 600 1.2rem var(--font-display); font-variant-numeric: tabular-nums; min-width: 0; }
 .formants.small > div { font-size: 1rem; }
