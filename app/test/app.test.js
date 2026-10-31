@@ -51,3 +51,19 @@ test('summarize: band fraction, loud-and-light fraction, medians', () => {
   assert.equal(quantile([1, 2, 3, 4, 5], 0.5), 3);
   assert.equal(fmtDuration(125.4), '2:05');
 });
+
+test('RollingMedian: windowed median ignores single-frame outliers and expires old samples', async () => {
+  const { RollingMedian } = await import('../src/ui/smoothing.js');
+  const m = new RollingMedian(1);
+  assert.ok(Number.isNaN(m.value(0)));
+  // 150 Hz at ~47 fps with one octave error in the middle.
+  for (let i = 0; i < 47; i++) m.push(i / 47, i === 20 ? 300 : 150);
+  assert.equal(m.value(46 / 47), 150);
+  m.push(0.99, NaN); // non-finite values are skipped
+  assert.equal(m.count, 47);
+  // Two seconds later with nothing new, the window is empty.
+  assert.ok(Number.isNaN(m.value(3)));
+  const e = new RollingMedian(1);
+  e.push(0, 1); e.push(0.1, 3);
+  assert.equal(e.value(0.1), 2); // even count: mean of the middle two
+});

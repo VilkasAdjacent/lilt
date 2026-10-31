@@ -82,10 +82,12 @@
           <div>
             <div class="big-num"><span id="pitchHz">–</span><small> Hz</small></div>
             <div class="sub" id="pitchNote">&nbsp;</div>
+            <div class="sub avg" id="pitchAvg"></div>
           </div>
           <div class="band-chip" id="bandChip" data-state="idle">mic off</div>
         </div>
-        <canvas class="trace" id="liveTrace" aria-label="Pitch over the last few seconds, with shaded target bands" role="img"></canvas>
+        <canvas class="trace" id="liveTrace" aria-label="Pitch over the last few seconds, with shaded target bands. Thick line: 1-second average. Dashed line: 10-second average." role="img"></canvas>
+        <p class="muted small-print">The thick line is your pitch averaged over 1 s, and the thin line is moment to moment. The dashed line is your 10 s average: that's the one to steer into a band. Wiggling above and below it is just intonation.</p>
         <div class="legend" id="bandLegend"></div>
       </div>
 

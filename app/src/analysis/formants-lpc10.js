@@ -67,4 +67,4 @@ export function estimate(frame, sampleRate, opts = {}) {
   return { f1: f[0], f2: f[1], f3: f[2], bw, fs, order: o.order, candidates: cands };
 }
 
-export default { name: 'lpc10', label: 'LPC-10, Praat-style (default)', estimate };
+export default { name: 'lpc10', label: 'LPC-10, Praat-style (experimental)', estimate };

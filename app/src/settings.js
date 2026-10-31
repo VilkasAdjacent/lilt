@@ -1,7 +1,7 @@
 // User settings, persisted in localStorage (wrapped: storage can throw in
 // private mode). Change events let views react.
 
-import { normalizeChoice } from './analysis/index.js';
+import { normalizeChoice, defaultChoice } from './analysis/index.js';
 
 export const BAND_PRESETS = {
   androgynous: { label: 'Androgynous', lo: 145, hi: 175 },
@@ -16,7 +16,8 @@ export const DEFAULTS = {
   nudgeMin: 12,             // soft nudge after N minutes
   loudDb: -28,              // dBFS above which we call it "loud" (mic dependent)
   lightMax: 0.45,           // weight score below which we call it "light"
-  analyzer: { pitch: 'pitchy', formants: 'lpc10', weight: 'h1h2' },
+  analyzer: { ...defaultChoice },
+  analyzerPicked: false,    // true once engines are chosen by hand in Settings
   traceSeconds: 8,
 };
 
@@ -28,7 +29,9 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const s = { ...DEFAULTS, ...JSON.parse(raw) };
-      s.analyzer = normalizeChoice(s.analyzer); // e.g. the old 'lpc' formant engine is now 'lpc10'
+      // Engines nobody picked by hand follow the current defaults (the whole
+      // settings object is saved on any change, so a stale default sticks otherwise).
+      s.analyzer = s.analyzerPicked ? normalizeChoice(s.analyzer) : { ...defaultChoice };
       return s;
     }
   } catch { /* ignore */ }

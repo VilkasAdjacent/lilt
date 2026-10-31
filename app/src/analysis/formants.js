@@ -51,4 +51,4 @@ export function estimate(frame, sampleRate, opts = {}) {
   return { f1: f[0], f2: f[1], f3: f[2], bw, fs, order, candidates: cands };
 }
 
-export default { name: 'lpc12', label: 'LPC-12, decimate + Hamming (previous)', estimate };
+export default { name: 'lpc12', label: 'LPC-12, decimate + Hamming (default)', estimate };

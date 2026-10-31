@@ -72,6 +72,7 @@ export function init(ctx) {
     sel.value = settings.analyzer[stage] || sel.options[0].value;
     sel.addEventListener('change', () => {
       const a = { ...settings.analyzer, [stage]: sel.value };
+      setSetting('analyzerPicked', true);
       setSetting('analyzer', a);
       mic.setAnalyzer(a);
     });
