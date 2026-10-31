@@ -39,6 +39,7 @@ index.html               all view markup (Home, Practice, Live, Record, Clips, S
 src/main.js              router, theme, session timer + rest nudge, tiny session, mic button
 src/settings.js          settings (localStorage) + target bands
 src/summary.js           per-recording stats (pure)
+src/vowels.js            vowel space (pure): corner vowels, scale presets, targets, capture median, plot axes, rings
 src/audio/capture.js     getUserMedia (EC/NS/AGC off + warning), AudioWorklet → ScriptProcessor
                          → MediaRecorder fallback, recording (PCM chunks stay on the main thread)
 src/audio/analysis-host.js  runs analysis in a module Web Worker, or on the main thread as a fallback
@@ -47,7 +48,8 @@ src/audio/frame.js       sliding-frame helper shared by both paths
 src/audio/capture-worklet.js
 src/audio/wav.js         16-bit WAV encode/decode (pure)
 src/store/db.js          IndexedDB recordings
-src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser)
+src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser;
+                         vowel-space.js: the Live "Vowel space" panel)
 src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
   feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light)
@@ -89,6 +91,16 @@ For WASM libraries (essentia.js, aubio), do the async init before registering, a
 - **Fallback:** the main thread analyses when module workers aren't supported. That is decided by feature detection: does `new Worker(blobUrl, { type: 'module' })` read the `type` option? It never looks at the user agent. The same fallback applies when the Worker fails to load or doesn't report ready within 5 s.
 - **Where to see it:** *Settings → Analysis engines* says which path is in use, and `lilt.mic.analysisMode` is `'worker'` or `'main'`.
 - **Unchanged:** recording, WAV export and IndexedDB stay on the main thread.
+
+## Vowel space
+
+A collapsible panel in Live: an F1×F2 chart in the phonetics orientation (F2 falls to the right, F1 grows downward, both log-scaled). It shows:
+- **Live vowel:** the 1 s median F1/F2 as a big dot, with a 1.5 s fading trail. When F0 > 200 Hz (`f1Approx`), the dot becomes a tall grey dashed ellipse labelled "F1 ≈", and the rings ignore F1.
+- **Your vowels:** *heed / had / hard / who'd*, captured in the panel. Tap a word and say it once. The capture is the median over the middle 60 % of the voiced frames of that one utterance, which skips the consonant glides at each end. Captured vowels are kept in settings (`localStorage`, this device only) and are never part of the code.
+- **Target rings:** each captured vowel × one factor per formant (`settings.vowelScale`). Every vowel gets the same factors, so the shape of the vowel space, which is the accent, stays the same and only its size changes. The presets are "A little smaller" (land: ×1.128 / 1.100 / 1.057 for F1/F2/F3) and "Further" (aim: ×1.273 / 1.210 / 1.118, the adult female/male ratio; land is half of it on a log scale). A ring is ±5 % in F2 and ±10 % in F1, as an ellipse in log frequency, and it fills pink while the live vowel is inside it.
+- **Before any capture:** generic reference rings (Peterson & Barney women's means), labelled as orientation only.
+
+Saved settings are parsed on load. Unknown corners and implausible formants are dropped, and missing or out-of-range factors fall back to land. Tests cover the pure maths (`test/vowels.test.js`).
 
 ## Known limitations
 

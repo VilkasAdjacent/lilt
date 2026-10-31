@@ -146,6 +146,20 @@
         <canvas class="scatter" id="llScatter" role="img" aria-label="Recent loudness against weight. Points in the top-right are loud and light."></canvas>
       </div>
 
+      <details class="card resonance" id="vowelCard">
+        <summary><h2>Vowel space</h2></summary>
+        <p class="muted small-print">What this shows: where your vowel sits, by its first two resonances. Small dots are your own vowels. Each dashed ring is the same vowel from a slightly smaller-sounding space, so your accent stays yours. Wander towards a ring and back; there's nothing to win.</p>
+        <canvas class="vspace" id="vowelPlot" role="img" aria-label="Vowel chart: F2 runs right to left, F1 top to bottom. Your live vowel is the big dot, your saved vowels are small dots, and their targets are dashed rings."></canvas>
+        <p class="muted small-print" id="vowelStatus" aria-live="polite"></p>
+        <h3>My vowels</h3>
+        <div class="row-btns vowel-btns" id="vowelBtns"></div>
+        <div class="seg vowel-scale" role="radiogroup" aria-label="How far the rings sit">
+          <label><input type="radio" name="vowelScale" value="land"> A little smaller</label>
+          <label><input type="radio" name="vowelScale" value="aim"> Further</label>
+        </div>
+        <button class="btn btn-ghost btn-small" id="vowelForget" type="button">forget my vowels</button>
+      </details>
+
       <details class="card resonance">
         <summary><h2>Resonance &amp; details</h2></summary>
         <div class="formants">
