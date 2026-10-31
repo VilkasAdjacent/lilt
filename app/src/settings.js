@@ -3,6 +3,7 @@
 
 import { normalizeChoice, defaultChoice } from './analysis/index.js';
 import { parseKind } from './practice/exercises.js';
+import { parseVowels, parseScale, SCALE_PRESETS } from './vowels.js';
 
 export const BAND_PRESETS = {
   androgynous: { label: 'Androgynous', lo: 145, hi: 175 },
@@ -22,6 +23,8 @@ export const DEFAULTS = {
   traceSeconds: 8,
   exerciseKind: 'any',      // Practice shuffle filter: 'any' or a key of KINDS
   exercisesSeen: [],        // recent exercise ids, oldest first, so the shuffle avoids repeats
+  vowels: {},               // captured corner vowels { heed: { f1, f2, f3, f0 }, ... }, this device only
+  vowelScale: { ...SCALE_PRESETS.land }, // target = own vowel × these, per formant
 };
 
 const KEY = 'voice-garden-settings-v1';
@@ -36,6 +39,8 @@ function load() {
       // settings object is saved on any change, so a stale default sticks otherwise).
       s.analyzer = s.analyzerPicked ? normalizeChoice(s.analyzer) : { ...defaultChoice };
       s.exerciseKind = parseKind(s.exerciseKind);
+      s.vowels = parseVowels(s.vowels);
+      s.vowelScale = parseScale(s.vowelScale);
       s.exercisesSeen = Array.isArray(s.exercisesSeen) ? s.exercisesSeen.filter((id) => typeof id === 'string') : [];
       return s;
     }

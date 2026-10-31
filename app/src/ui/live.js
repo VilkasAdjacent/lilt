@@ -7,6 +7,7 @@ import { settings, activeBands, onSettings } from '../settings.js';
 import { drawPitchTrace, drawScatter, refreshPalette } from './draw.js';
 import { hzToNote, F1_APPROX_ABOVE_F0 } from '../analysis/index.js';
 import { RollingMedian, SMOOTH_SEC, AVG_SEC } from './smoothing.js';
+import * as vowelSpace from './vowel-space.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -62,7 +63,7 @@ export function readouts() {
   const voiced = haveVoice();
   return {
     t: smooth.t, voiced, avg: pitchAvg(), dbfs: sm('dbfs'),
-    f0: voiced ? sm('f0') : NaN, f2: voiced ? sm('f2') : NaN, weight: voiced ? sm('weight') : NaN,
+    f0: voiced ? sm('f0') : NaN, f1: voiced ? sm('f1') : NaN, f2: voiced ? sm('f2') : NaN, weight: voiced ? sm('weight') : NaN,
   };
 }
 
@@ -185,7 +186,8 @@ function renderLegend() {
 
 export function kick() { dirty = true; if (!raf && visible) raf = requestAnimationFrame(render); }
 
-export function init() {
+export function init(ctx) {
+  vowelSpace.init(ctx);
   renderLegend();
   onSettings(({ key }) => {
     if (key === 'bands' || key === 'customBand') renderLegend();
@@ -196,5 +198,5 @@ export function init() {
   mic.addEventListener('state', kick);
   window.addEventListener('resize', kick);
 }
-export function show() { visible = true; llState = ''; kick(); }
-export function hide() { visible = false; }
+export function show() { visible = true; llState = ''; kick(); vowelSpace.show(); }
+export function hide() { visible = false; vowelSpace.hide(); }
