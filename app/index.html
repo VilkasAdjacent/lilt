@@ -92,6 +92,18 @@
         <p class="muted" id="exBlurb"></p>
         <ol class="ex-steps" id="exSteps"></ol>
         <p class="care small-print" id="exCare" hidden></p>
+        <div class="babble" id="exBabble" hidden>
+          <div class="babble-row">
+            <button class="btn btn-small" id="babbleBtn" type="button" aria-pressed="false">☕ Start the café</button>
+            <label class="babble-level"><span>quiet</span><input type="range" id="babbleLevel" min="0" max="1" step="0.05" aria-label="Café noise, quiet to busy"><span>busy</span></label>
+          </div>
+          <p class="small-print muted" id="babbleNote" aria-live="polite"></p>
+          <details class="small-print">
+            <summary>Headphones or speaker?</summary>
+            <p><strong>One earbud in works best.</strong> The mic then hears only you, so the readings stay sharp, and your other ear can still hear your own voice. With both ears covered, everyone pushes harder.</p>
+            <p>On the phone speaker the mic hears the café too, and this app doesn't filter it out. Practice still works, but loudness, weight and F2 get rougher, and I'll mark those tries with ≈. Keep the volume moderate: it only needs to feel busy.</p>
+          </details>
+        </div>
         <div class="ex-foot">
           <label class="select">Kind <select id="exKindSel"></select></label>
           <button class="btn btn-soft btn-small" id="exNext" type="button">another one</button>

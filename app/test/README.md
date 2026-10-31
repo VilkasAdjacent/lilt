@@ -31,14 +31,18 @@ Every formant test runs once per registered implementation (`formants [lpc10] �
 | WAV export | 16-bit round trip within ½ LSB | |
 | creak hit rate, per frame | ≥ 50 % in every condition, ≥ 75 % on average | fry 25/35/50/65 Hz × {male, female} × {heed, hard}; period doubling (alternate 0.5) at 80/110/150 Hz × {male, female}; fry 35/50 Hz + white noise at 20 dB SNR |
 | creak false alarms, per frame | ≤ 10 % in every condition, ≤ 2 % on average | modal (1 % jitter, 5 % shimmer) male 75–150 Hz and female 150–280 Hz × heed/hard/who'd × breathiness 0/0.5/1; male hard 80/100/120 Hz + noise at 10 dB SNR |
-| creak per utterance | "end" / "none" / "none" / "throughout" | real analyser + `UtteranceTracker` over: 1 s modal + 0.3 s fry tail; 1.3 s modal; four syllables with 8 ms plosive bursts between; 1.2 s fry |
+| creak per utterance | "end" / "none" / "none" / "throughout"; creak alone is no utterance | real analyser + `UtteranceTracker` over: 1 s modal + 0.3 s fry tail; 1.3 s modal; four syllables with 8 ms plosive bursts between; 0.25 s modal + 1.2 s fry; 1.2 s fry alone (an utterance needs ≥ 6 modal frames, because noise such as the café trips the creak cues now and then) |
 | `creakRuns` | bridges one missed frame; three flags separated by pauses are not a run | |
 | phrase shape | linear 4 st glide: span 3.6 ± 0.15 st, "fall"; +2 st last 250 ms: final within 0.01 st, "rise"; a fry tail flagged creak at 62 Hz leaves the shape level | |
 | session care | creak share rising → "creak"; median pitch −1.5 st → "drift" (off for step drills); nothing before 6 attempts | |
+| Café envelope | strongest 1/3-octave modulation band 2.5–6 Hz; silent first and last sample | 4 seeds, 12 s |
+| Café alone into the mic (dry, −40 dBFS) | ≤ 10 % frames voiced, 0 attempts | quietest and busiest level, 9 s |
+| Voice 10 dB over the busy café | ≥ 90 % voiced, F0 median ±10 cents, F2 ±max(5 %, 60 Hz) | female had @ 190 Hz |
+| Voice 3 dB over the café | own level within ±1 dB after floor subtraction | same |
 
 ## Results (current code)
 
-`npm test`: 186 tests, **117 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
+`npm test`: 205 tests, **136 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
 
 ### F0
 
@@ -137,9 +141,20 @@ Per-frame creak rate (`creak.js` on pitchy's answer for the same frame):
 - **Fry at 25 Hz is the weakest case.** A 43 ms frame holds one or two pulses, and a pulse near the frame edge has no valley on one side. The utterance logic bridges one missed frame, so a 25 Hz tail still forms runs.
 - **The zero false-alarm rate is mostly the modal gate.** Every modal frame here is voiced by pitchy at ≥ 70 Hz. The pulse cues only see frames pitchy rejects: onsets, consonants, rough voice and creak. The "rough" voice (well past typical modal jitter and shimmer) trips the jitter cue in up to 22 % of frames, because the prominence test skips a weaker pulse. Bursts trip the lone-pulse cue in 17 % of frames, always in runs of ≤ 2. Neither condition is in the suite, which is why the ≥ 3-frame run rule exists.
 
-Per utterance (real analyser + tracker): modal + fry tail reads **end** (25 % of sounding frames, 79 % of the last 0.4 s, 0 % before it). Modal only reads **none**, syllables with bursts read **none**, and 1.2 s of fry reads **throughout** (100 %). Phrase shape: the 4 st glide reads a 3.51 st span (expected 3.6: 56 frames quantised, tolerance 0.15) and a −1.63 st "fall". The +2 st ending reads +2.00 st "rise". The fry tail case reads a 0.00 st span, "level".
+Per utterance (real analyser + tracker): modal + fry tail reads **end** (25 % of sounding frames, 79 % of the last 0.4 s, 0 % before it). Modal only reads **none**, syllables with bursts read **none**, 0.25 s modal + 1.2 s fry reads **throughout**, and 1.2 s of fry alone makes no utterance (before the merge with café babble it read **throughout**; the café alone made 5 creak-only fake attempts at the quiet level, so a run now needs ≥ 6 modal frames). Phrase shape: the 4 st glide reads a 3.51 st span (expected 3.6: 56 frames quantised, tolerance 0.15) and a −1.63 st "fall". The +2 st ending reads +2.00 st "rise". The fry tail case reads a 0.00 st span, "level".
 
 Cost: about 0.02–0.03 ms per frame in Node on a desktop CPU, so it fits easily within the Worker's per-frame budget.
+
+### Café babble (`babble.test.js`)
+
+This is the leak case: the phone speaker plays the café and the mic hears it, with no echo cancellation. The test mix is dry (no room reverb). In headless Chrome, the real Web Audio graph with reverb gave 1.3 / 0.4 / 0.4 % voiced at levels 0 / 0.3 / 1.
+
+- **Café alone:** 1.2 % of frames voiced at the quietest level (3 talkers) and 0.2 % at the busiest. Neither produced an attempt.
+  - Earlier versions started from 2 talkers. With no jitter, the quietest level was 67 % voiced; with 5 % jitter, 37 %. Both made fake attempts.
+  - The talkers now have ±12 % jitter and more breath noise, so the clarity gate rejects them.
+- **Voice 10 dB over:** 99 % voiced, F0 −0.0 cents, F2 1971 Hz against 1950 (+1.1 %). Weight read 0.90 alone and 0.89 over the café. That's reported, not asserted.
+- **Voice 3 dB over:** the floor reads −39.5 dBFS for a −40 dBFS café. Uncorrected, the mic level is +1.91 dB off the voice alone. With the floor subtracted, it's −0.04 dB off.
+  - A 10th-percentile floor (the first version) read −52 dBFS, 12 dB under the café's power, and corrected only to +1.5 dB. So the floor is now the median.
 
 ## lpc12 order: why round(fs/1000) and not 2 + fs/1000
 

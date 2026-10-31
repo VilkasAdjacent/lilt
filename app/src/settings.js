@@ -4,6 +4,7 @@
 import { normalizeChoice, defaultChoice } from './analysis/index.js';
 import { parseKind } from './practice/exercises.js';
 import { parseVowels, parseScale, SCALE_PRESETS } from './vowels.js';
+import { parseBabbleLevel } from './audio/babble-synth.js';
 
 export const BAND_PRESETS = {
   androgynous: { label: 'Androgynous', lo: 145, hi: 175 },
@@ -25,6 +26,7 @@ export const DEFAULTS = {
   exercisesSeen: [],        // recent exercise ids, oldest first, so the shuffle avoids repeats
   vowels: {},               // captured corner vowels { heed: { f1, f2, f3, f0 }, ... }, this device only
   vowelScale: { ...SCALE_PRESETS.land }, // target = own vowel × these, per formant
+  babbleLevel: parseBabbleLevel(), // café noise, 0 quiet .. 1 busy
 };
 
 const KEY = 'voice-garden-settings-v1';
@@ -42,6 +44,7 @@ function load() {
       s.vowels = parseVowels(s.vowels);
       s.vowelScale = parseScale(s.vowelScale);
       s.exercisesSeen = Array.isArray(s.exercisesSeen) ? s.exercisesSeen.filter((id) => typeof id === 'string') : [];
+      s.babbleLevel = parseBabbleLevel(s.babbleLevel);
       return s;
     }
   } catch { /* ignore */ }

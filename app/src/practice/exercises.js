@@ -3,6 +3,7 @@
 //
 // watch: which readout the exercise is about ('pitch' | 'resonance' | 'loudlight' | null).
 // score: per-attempt feedback (see practice/feedback.js), or absent for none.
+// babble: true offers the procedural café noise (audio/babble.js) with this exercise.
 
 export const KINDS = {
   warmup: 'Warm-up',
@@ -14,6 +15,7 @@ export const KINDS = {
 };
 
 const LOUD_CARE = 'Loud should feel roomy, not pushed. If it gets scratchy or tight, back off a notch or stop there.';
+const NOISE_CARE = 'Noise makes everyone push without noticing. Noticing is the exercise. If they couldn\'t hear you, step closer instead of pushing, and stop before anything feels strained.';
 
 export const EXERCISES = [
   // ---------------------------------------------------------------- warm-up
@@ -296,6 +298,26 @@ export const EXERCISES = [
     ],
     care: LOUD_CARE,
   },
+  {
+    id: 'mmhmm-noise', kind: 'loudlight', title: '"Mm-hmm" in a busy room', watch: 'loudlight', score: { kind: 'noise' }, babble: true,
+    blurb: 'A buzzy, resonant "mm-hmm" over café noise. The gentlest way into noise.',
+    steps: [
+      'Say a buzzy "mm-hmm!" once with the café off.',
+      'Start the café, quiet to begin with, and say it again. Keep the buzz on your lips and let the room be loud.',
+      'Nudge the café up a little and try again.',
+    ],
+    care: NOISE_CARE,
+  },
+  {
+    id: 'nyeh-noise', kind: 'loudlight', title: '"Nyeh" over the noise', watch: 'loudlight', score: { kind: 'noise' }, babble: true,
+    blurb: 'Twang carries over noise without pushing. A cheeky kid in a busy café.',
+    steps: [
+      'With the café off: "nyeh nyeh nyeh", then "excuse me!"',
+      'Café on: the same, small and bright. Let the twang do the carrying.',
+      'Up a notch, once more, then rest.',
+    ],
+    care: NOISE_CARE,
+  },
 
   {
     id: 'straw-to-ah', kind: 'loudlight', title: 'Straw to "ah"', watch: 'loudlight', score: { kind: 'loudlight' },
@@ -350,14 +372,15 @@ export const EXERCISES = [
     ],
   },
   {
-    id: 'over-noise', kind: 'together', title: 'Order over the noise', watch: 'loudlight', score: { kind: 'loudlight' },
-    blurb: 'Café noise on another device, and your order over the top of it.',
+    id: 'over-noise', kind: 'together', title: 'Order over the noise', watch: 'loudlight', score: { kind: 'noise' }, babble: true,
+    blurb: 'Your coffee order in a busy café, staying light while the room gets loud. Easiest after the "mm-hmm" and "nyeh" ones.',
     steps: [
-      'Play café or crowd noise on another device or speaker, not too loud to start.',
-      'Order your coffee over it: bright, up, loud but light.',
-      'Turn the noise up a little and try again.',
+      'Say your order once with the café off: "Hi, can I get a flat white, please?"',
+      'Start the café, quiet to begin with, and order again: bright, a bit up, loud but light.',
+      'Turn the café up a notch and try again. Each try is compared with your quiet one.',
+      'A few tries is plenty. Then switch it off and rest.',
     ],
-    care: 'Noise makes everyone push. Noticing that is the exercise. Stop before anything feels strained.',
+    care: NOISE_CARE,
   },
   {
     id: 'kitty', kind: 'together', title: 'Call the cat', watch: 'pitch', score: { kind: 'band' },

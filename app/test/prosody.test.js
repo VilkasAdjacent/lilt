@@ -76,19 +76,21 @@ const burst = (seed) => {
   return Float32Array.from({ length: 400 }, (_, i) => (rnd() - 0.5) * 0.6 * Math.exp(-i / 80));
 };
 
-test('creak per utterance: phrase-final creak reads "end", modal reads "none", all-creak reads "throughout"', () => {
+test('creak per utterance: phrase-final creak reads "end", modal reads "none", mostly-creak reads "throughout"', () => {
   const v = (f0, dur, seed) => modal({ f0, sex: 'male', vowel: 'hard', dur, seed });
   const cases = [
     ['modal then a creaky tail', join(silence(0.3), v(110, 1.0, 1), creaky({ f0: 40, dur: 0.3, peak: 0.25 }), silence(0.6)), 'end'],
     ['modal only', join(silence(0.3), v(110, 1.3, 2), silence(0.6)), 'none'],
     ['syllables with plosive bursts', join(silence(0.3), ...[1, 2, 3, 4].flatMap((s) => [v(120, 0.25, s), silence(0.04), burst(s), silence(0.04)]), silence(0.6)), 'none'],
-    ['creaky all through', join(silence(0.3), creaky({ f0: 45, dur: 1.2, seed: 3 }), silence(0.6)), 'throughout'],
+    ['creaky all through after a short modal onset', join(silence(0.3), v(110, 0.25, 4), creaky({ f0: 45, dur: 1.2, seed: 3 }), silence(0.6)), 'throughout'],
   ];
   for (const [label, x, want] of cases) {
     const us = utterances(x);
     assert.equal(us.length, 1, `${label}: ${us.length} utterances`);
     assert.equal(us[0].creak.where, want, `${label}: ${JSON.stringify(us[0].creak)}`);
   }
+  // Noise (a café, the room) trips the creak cues now and then; with no modal voice it isn't someone speaking.
+  assert.equal(utterances(join(silence(0.3), creaky({ f0: 45, dur: 1.2, seed: 3 }), silence(0.6))).length, 0, 'creak alone');
 });
 
 test('creakRuns: bridges one missed frame, never a pause between sounding frames', () => {

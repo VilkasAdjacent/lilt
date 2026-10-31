@@ -254,6 +254,12 @@ main { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; outline: none; 
 .ex-steps li { margin-bottom: 0.4em; }
 .ex-steps li::marker { font: 600 1em var(--font-display); color: var(--pink-deep); }
 .care { background: var(--surface-2); border-radius: 14px; padding: 8px 12px; font-weight: 700; }
+.babble { border: 2px dashed var(--grid); border-radius: 14px; padding: 8px 12px; margin: 0 0 10px; }
+.babble-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.babble-row #babbleBtn[aria-pressed="true"] { background: var(--lav); }
+.babble-level { flex: 1 1 12em; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; }
+.babble p { margin: 6px 0 0; }
+.babble summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; }
 .ex-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
 .ex-foot .select { min-height: 44px; }
 .ex-foot .select select { min-width: 8em; }
