@@ -4,6 +4,7 @@
 
 import { quantile } from '../summary.js';
 import { hzToSemitones, hzToNote } from '../analysis/index.js';
+import { voiceDb, hearsNoise } from './noise.js';
 
 const median = (frames, key) => quantile(frames.map((f) => f[key]), 0.5);
 
@@ -70,16 +71,57 @@ export function scoreLoudLight(cur, { loudDb, lightMax }) {
   return { state: 'yay', text: 'Loud and light ✓' };
 }
 
+// Under the café, for "loud but light" in noise. The voice's level has the
+// noise floor taken out, and "holding up" is against the latest try made with
+// the café off (or the band, before there is one): noise tends to pull pitch
+// down and resonance darker, back toward old habits.
+const NOISE_VOICE = {
+  quiet: 'Easy and light. Fine to stay there; if they\'d miss it, lean in or add breath rather than push',
+  heavy: 'Loud, but leaning heavy. Noise pulls everyone that way. Lighter and brighter, and let the room be loud?',
+  yay: 'Loud and light over the noise',
+};
+const PITCH_DROP_ST = -1.5;
+const F2_DARKER_PCT = -5;
+
+function holdingUp(cur, quiet, bands) {
+  if (!quiet) {
+    const band = scoreBand(cur, bands);
+    return { ok: band.state === 'yay', text: band.text };
+  }
+  const st = hzToSemitones(cur.f0, quiet.f0);
+  const f2Pct = (cur.f2 / quiet.f2 - 1) * 100;
+  const pitch = st < PITCH_DROP_ST ? `Pitch dropped ${signed(st)} st` : `Pitch held (${signed(st)} st)`;
+  const f2 = !Number.isFinite(f2Pct) ? '' : f2Pct < F2_DARKER_PCT ? `, F2 ${signed(f2Pct, 0)}%, a bit darker` : ', resonance held';
+  return { ok: st >= PITCH_DROP_ST && !(f2Pct < F2_DARKER_PCT), text: `${pitch}${f2}, against your quiet try.` };
+}
+
+/**
+ * ctx: { bands, loudDb, lightMax, floorDb, noisy (café playing), quiet (latest try with it off) }.
+ * Null when the "utterance" was no louder than the floor: probably the café's own voices.
+ */
+export function scoreOverNoise(cur, ctx) {
+  const { floorDb, loudDb, noisy, quiet, bands } = ctx;
+  if (cur.dbfs - floorDb < 3) return null;
+  const rough = hearsNoise(floorDb, loudDb) ? '≈ ' : '';
+  if (!noisy) return { state: 'info', text: `${rough}Quiet try: ${pitchLabel(cur.f0)}. Now the same with the café on.` };
+  const { state } = scoreLoudLight({ ...cur, dbfs: voiceDb(cur.dbfs, floorDb) }, ctx);
+  const held = holdingUp(cur, quiet, bands);
+  const win = state === 'yay' && held.ok;
+  return { state: state === 'yay' && !win ? 'info' : state, text: `${rough}${NOISE_VOICE[state]}${win ? ' ✓' : '.'} ${held.text}` };
+}
+
 const SCORERS = {
   step: { paired: true, score: (prev, cur, spec) => scoreStep(prev, cur, spec.st) },
   contrast: { paired: true, score: (prev, cur) => scoreContrast(prev, cur) },
   band: { paired: false, score: (_, cur, spec, ctx) => scoreBand(cur, ctx.bands) },
   loudlight: { paired: false, score: (_, cur, spec, ctx) => scoreLoudLight(cur, ctx) },
+  noise: { paired: false, score: (_, cur, spec, ctx) => scoreOverNoise(cur, ctx) },
 };
 
 /**
  * Feedback for the latest attempt under an exercise's `score` spec.
- * ctx: { bands, loudDb, lightMax }. Paired scorers compare with the previous attempt.
+ * ctx: { bands, loudDb, lightMax }, plus floorDb, noisy, quiet for 'noise'. Paired scorers
+ * compare with the previous attempt. Null means it wasn't an attempt, so ignore it.
  */
 export function scoreAttempt(spec, prev, cur, ctx) {
   const scorer = SCORERS[spec.kind];

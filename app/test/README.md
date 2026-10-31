@@ -29,10 +29,14 @@ Every formant test runs once per registered implementation (`formants [lpc10] �
 | LTAS over frames vs per-frame tilt, steady vowel | ±0.5 dB | |
 | dBFS | sine reads 20·log10(A/√2) ± 0.05 dB; ×2 gain reads +6.02 ± 0.01 dB | |
 | WAV export | 16-bit round trip within ½ LSB | |
+| Café envelope | strongest 1/3-octave modulation band 2.5–6 Hz; silent first and last sample | 4 seeds, 12 s |
+| Café alone into the mic (dry, −40 dBFS) | ≤ 10 % frames voiced, 0 attempts | quietest and busiest level, 9 s |
+| Voice 10 dB over the busy café | ≥ 90 % voiced, F0 median ±10 cents, F2 ±max(5 %, 60 Hz) | female had @ 190 Hz |
+| Voice 3 dB over the café | own level within ±1 dB after floor subtraction | same |
 
 ## Results (current code)
 
-`npm test`: 177 tests, **108 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
+`npm test`: 186 tests, **117 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
 
 ### F0
 
@@ -101,6 +105,17 @@ Results:
 - **Tilt alone** is not monotonic in breathiness on this synth, because aspiration noise fills the 1–4 kHz band. Male hard @ 110 reads −15.2 → −13.1 → −14.8 → −15.4 → −16.7 dB.
 - Tilt also depends strongly on the vowel: /a/ reads about −5 to −17 dB, /i/ about −23 to −34 dB. Both points fit the research advice: read tilt together with H1–H2, and compare like with like.
 - The score still uses *uncorrected* H1–H2. `h1h2c` (Iseli–Alwan) depends on the biased F1.
+
+### Café babble (`babble.test.js`)
+
+This is the leak case: the phone speaker plays the café and the mic hears it, with no echo cancellation. The test mix is dry (no room reverb). In headless Chrome, the real Web Audio graph with reverb gave 1.3 / 0.4 / 0.4 % voiced at levels 0 / 0.3 / 1.
+
+- **Café alone:** 1.2 % of frames voiced at the quietest level (3 talkers) and 0.2 % at the busiest. Neither produced an attempt.
+  - Earlier versions started from 2 talkers. With no jitter, the quietest level was 67 % voiced; with 5 % jitter, 37 %. Both made fake attempts.
+  - The talkers now have ±12 % jitter and more breath noise, so the clarity gate rejects them.
+- **Voice 10 dB over:** 99 % voiced, F0 −0.0 cents, F2 1971 Hz against 1950 (+1.1 %). Weight read 0.90 alone and 0.89 over the café. That's reported, not asserted.
+- **Voice 3 dB over:** the floor reads −39.5 dBFS for a −40 dBFS café. Uncorrected, the mic level is +1.91 dB off the voice alone. With the floor subtracted, it's −0.04 dB off.
+  - A 10th-percentile floor (the first version) read −52 dBFS, 12 dB under the café's power, and corrected only to +1.5 dB. So the floor is now the median.
 
 ## lpc12 order: why round(fs/1000) and not 2 + fs/1000
 

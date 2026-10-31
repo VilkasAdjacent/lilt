@@ -46,11 +46,15 @@ src/audio/analysis-worker.js  the Worker: sliding 2048 frame + createAnalyzer()
 src/audio/frame.js       sliding-frame helper shared by both paths
 src/audio/capture-worklet.js
 src/audio/wav.js         16-bit WAV encode/decode (pure)
+src/audio/babble-synth.js  procedural café babble (pure): talkers, clatter, room impulse, level mix
+src/audio/babble.js      plays it on the mic's AudioContext (looped buffers, panning, reverb, fades)
 src/store/db.js          IndexedDB recordings
 src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser)
 src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
-  feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light)
+  feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light,
+                         over the noise)
+  noise.js               noise floor at the mic (median of unvoiced frames) + the voice's level above it
 src/analysis/            ALL DSP. Pure functions on Float32Array, run in Node too
   index.js               plug-in registry + createAnalyzer() (the only thing the UI calls)
   pitch.js               pitchy (MPM), clarity ≥ 0.8, subharmonic guard
@@ -90,6 +94,18 @@ For WASM libraries (essentia.js, aubio), do the async init before registering, a
 - **Where to see it:** *Settings → Analysis engines* says which path is in use, and `lilt.mic.analysisMode` is `'worker'` or `'main'`.
 - **Unchanged:** recording, WAV export and IndexedDB stay on the main thread.
 
+## Café noise (babble practice)
+
+Exercises with `babble: true` show a *Start the café* button and a quiet → busy slider. No audio files are involved; the room is synthesised.
+- **What it is:** 8 talkers, each a pulse train plus breath noise through three formant resonators that glide to a new vowel every syllable (3–5.5 syllables/s, in phrases), plus cup clinks and a short stereo room reverb. They're rendered once (about 0.15 s on a desktop, at 16 kHz) when a café exercise is shown, then looped at different lengths and start points. The level joins talkers one by one (3 → 8) and raises the room by 18 dB.
+- **Lifecycle:** it plays on the mic's AudioContext, so stopping the mic stops it. It also stops on leaving Practice, changing exercise, hiding the tab, and after 3 minutes (a kind "rest a moment" note).
+- **Mic leak:** the app turns echo cancellation off, so on the phone speaker the mic hears the café. The app doesn't try to cancel it, because an adaptive filter over a phone's speaker-to-mic path isn't reliable enough to trust. Instead:
+  - The UI recommends one earbud: the mic hears only you, and the other ear still hears your own voice.
+  - The talkers are deliberately rough (±12 % jitter, breathy), so the pitch clarity gate rejects them. Leaked café alone is ≤ 1.3 % voiced frames and never makes an attempt (`test/babble.test.js`).
+  - `noise.js` tracks the floor (the median dBFS of unvoiced frames over 6 s), and "loud" is judged on the voice's own level with the floor's power taken out.
+  - When the floor is within 12 dB of the "loud" threshold, the café note says so and readings and attempts get a "≈": weight and F2 are rougher then.
+- **Scoring (`noise`):** a try with the café off becomes the reference. Each try with it on gets loud × light, plus whether pitch held (no drop of more than 1.5 st) and resonance held (F2 no more than 5 % darker). Before there's a reference, it's checked against the band instead.
+
 ## Known limitations
 
 - **Why lpc12 is the default, not lpc10.** lpc10 reproduces Praat on real recordings (research/library_comparison.md). On this app's noise-free synthetic grid it misses F2/F3 on all 64 cases, because a spare pole lands between F1 and F2. With a noise floor it passes most male cases, but female vowels still fail. lpc12 passes 60 of 64. Numbers are in `test/README.md`. Check lpc10 on real female speech. lpc10 is selectable in Settings.
@@ -99,3 +115,4 @@ For WASM libraries (essentia.js, aubio), do the async init before registering, a
 - Analysis runs about 47 frames/s (hop 1024 at 48 kHz) in the Worker. The research estimates ≈ 3.3 ms per frame, phone-scaled, for this pipeline.
 - The tilt measure changed (now dB, 1–4 kHz vs 50–1000 Hz, not dB/octave), so weight scores from before this change aren't comparable with new ones.
 - No offline service worker yet.
+- The café has only been checked numerically and in headless Chrome, not listened to. Whether it reads as a busy room, and how much a phone speaker leaks into the mic, still need checking on a real device.

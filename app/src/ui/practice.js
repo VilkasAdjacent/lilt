@@ -6,6 +6,8 @@ import { settings, setSetting, activeBands } from '../settings.js';
 import { hzToNote } from '../analysis/index.js';
 import { KINDS, EXERCISES, pickExercise } from '../practice/exercises.js';
 import { UtteranceTracker, scoreAttempt } from '../practice/feedback.js';
+import { NoiseFloor, voiceDb, hearsNoise } from '../practice/noise.js';
+import { startBabble, prepareBabble } from '../audio/babble.js';
 import { drawPitchTrace } from './draw.js';
 import { history, readouts, weightWord } from './live.js';
 
@@ -29,18 +31,65 @@ const SCORE_HINT = {
   contrast: "Each attempt is compared with the one before: F2 should move, pitch shouldn't.",
   band: 'Each attempt shows where its pitch sat.',
   loudlight: 'Each attempt: was it loud, and did it stay light?',
+  noise: 'Each try with the café on: loud but light, and did pitch and resonance hold up against your quiet try?',
 };
 
 let current = null, visible = false, raf = 0;
 const tracker = new UtteranceTracker();
 let lastAttempt = null, attempts = [];
 
+// ------------------------------------------------------------------ café --
+// Short doses: the café closes itself after a few minutes.
+const BABBLE_MAX_MS = 3 * 60000;
+const floor = new NoiseFloor();
+let babble = null, babbleTimer = 0, babbleRested = false, quietTry = null, babbleNote = '';
+
+function stopBabble({ rested = false } = {}) {
+  clearTimeout(babbleTimer);
+  if (babble) babble.stop();
+  babble = null;
+  babbleRested = rested;
+  floor.clear();
+  renderBabble();
+}
+
+async function toggleBabble(startMic) {
+  if (babble) { stopBabble(); return; }
+  if (!mic.running) await startMic();
+  if (!mic.running || !mic.ctx || !current.babble) { renderBabble(); return; }
+  babble = startBabble(mic.ctx, settings.babbleLevel);
+  babbleRested = false;
+  floor.clear();
+  babbleTimer = setTimeout(() => stopBabble({ rested: true }), BABBLE_MAX_MS);
+  renderBabble();
+}
+
+function babbleNoteText() {
+  if (babble) {
+    return hearsNoise(floor.db, settings.loudDb)
+      ? '≈ The mic can hear the café, so loudness, weight and F2 are rougher right now. One earbud in keeps them sharp.'
+      : 'Café on. Stay light and let the room be loud.';
+  }
+  if (babbleRested) return "That's a few minutes of café, which is a lovely dose 🌙 Rest your voice a moment, and start it again if you like.";
+  if (mic.running && !mic.ctx) return "The café needs Web Audio, which this browser isn't offering here.";
+  return 'Do your quiet try first, with the café off. One earbud in is best: the mic hears only you.';
+}
+
+function renderBabble() {
+  $('babbleBtn').setAttribute('aria-pressed', String(!!babble));
+  $('babbleBtn').textContent = babble ? '☕ Stop the café' : '☕ Start the café';
+  const text = babbleNoteText();
+  if (text !== babbleNote) $('babbleNote').textContent = babbleNote = text;
+}
+
 function choose(ex) {
   current = ex;
   setSetting('exercisesSeen', [...settings.exercisesSeen.filter((id) => id !== ex.id), ex.id].slice(-SEEN_MAX));
   tracker.clear();
   lastAttempt = null;
+  quietTry = null;
   attempts = [];
+  stopBabble();
   renderCards();
 }
 const shuffle = () => choose(pickExercise({ kind: settings.exerciseKind, recent: settings.exercisesSeen }));
@@ -57,6 +106,8 @@ function renderCards() {
   $('exSteps').replaceChildren(...current.steps.map((s) => el('li', { textContent: s })));
   $('exCare').hidden = !current.care;
   $('exCare').textContent = current.care ? `💧 ${current.care}` : '';
+  $('exBabble').hidden = !current.babble;
+  if (current.babble) (window.requestIdleCallback || setTimeout)(prepareBabble);
   $('pxHint').textContent = [WATCH_HINT[current.watch] || 'Eyes off the screen for this one, if you like.', current.score && SCORE_HINT[current.score.kind]]
     .filter(Boolean).join(' ');
   for (const box of document.querySelectorAll('#pxReadouts [data-watch]')) box.classList.toggle('watching', box.dataset.watch === current.watch);
@@ -91,22 +142,40 @@ function render() {
   $('pxPitch').textContent = shown(r.f0) ? Math.round(r.f0) : '–';
   $('pxNote').textContent = shown(r.f0) ? hzToNote(r.f0) : '';
   $('pxF2').textContent = shown(r.f2) ? Math.round(r.f2) : '–';
-  $('pxLL').textContent = shown(r.weight) ? `${r.dbfs >= settings.loudDb ? 'loud' : 'quiet'} · ${weightWord(r.weight)}` : '–';
+  // Over the café, "loud" is the voice's own level, with the noise the mic hears taken out.
+  const rough = current.babble && hearsNoise(floor.db, settings.loudDb) ? '≈ ' : '';
+  const level = current.babble ? voiceDb(r.dbfs, floor.db) : r.dbfs;
+  $('pxLL').textContent = shown(r.weight) ? `${rough}${level >= settings.loudDb ? 'loud' : 'quiet'} · ${weightWord(r.weight)}` : '–';
+  if (current.babble) renderBabble();
 }
 const kick = () => { if (visible && !raf) raf = requestAnimationFrame(render); };
 
 function onFrame(e) {
   kick();
+  floor.push(e.detail);
   if (!visible || !current.score) return;
   const u = tracker.push(e.detail);
   if (!u) return;
-  const result = scoreAttempt(current.score, lastAttempt, u, { bands: activeBands(), loudDb: settings.loudDb, lightMax: settings.lightMax });
+  const result = scoreAttempt(current.score, lastAttempt, u, {
+    bands: activeBands(), loudDb: settings.loudDb, lightMax: settings.lightMax,
+    floorDb: floor.db, noisy: !!babble, quiet: quietTry,
+  });
+  if (!result) return;
   lastAttempt = u;
+  if (!babble) quietTry = u;
   attempts = [result, ...attempts].slice(0, ATTEMPTS_MAX);
   renderAttempts();
 }
 
-export function init() {
+export function init({ startMic }) {
+  const level = $('babbleLevel');
+  level.value = settings.babbleLevel;
+  level.addEventListener('input', () => {
+    setSetting('babbleLevel', +level.value);
+    if (babble) babble.setLevel(settings.babbleLevel);
+  });
+  $('babbleBtn').addEventListener('click', () => toggleBabble(startMic));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopBabble(); });
   const sel = $('exKindSel');
   sel.replaceChildren(...Object.entries({ any: 'Anything', ...KINDS }).map(([value, label]) => el('option', { value, textContent: label })));
   sel.value = settings.exerciseKind;
@@ -117,10 +186,10 @@ export function init() {
   shuffle();
   mic.addEventListener('frame', onFrame);
   mic.addEventListener('state', () => {
-    if (!mic.running) { tracker.clear(); lastAttempt = null; }
+    if (!mic.running) { tracker.clear(); lastAttempt = null; quietTry = null; stopBabble(); }
     if (visible) { renderAttempts(); kick(); }
   });
   window.addEventListener('resize', kick);
 }
 export function show() { visible = true; renderAttempts(); kick(); }
-export function hide() { visible = false; tracker.clear(); }
+export function hide() { visible = false; tracker.clear(); stopBabble(); }

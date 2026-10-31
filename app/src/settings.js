@@ -3,6 +3,7 @@
 
 import { normalizeChoice, defaultChoice } from './analysis/index.js';
 import { parseKind } from './practice/exercises.js';
+import { parseBabbleLevel } from './audio/babble-synth.js';
 
 export const BAND_PRESETS = {
   androgynous: { label: 'Androgynous', lo: 145, hi: 175 },
@@ -22,6 +23,7 @@ export const DEFAULTS = {
   traceSeconds: 8,
   exerciseKind: 'any',      // Practice shuffle filter: 'any' or a key of KINDS
   exercisesSeen: [],        // recent exercise ids, oldest first, so the shuffle avoids repeats
+  babbleLevel: parseBabbleLevel(), // café noise, 0 quiet .. 1 busy
 };
 
 const KEY = 'voice-garden-settings-v1';
@@ -37,6 +39,7 @@ function load() {
       s.analyzer = s.analyzerPicked ? normalizeChoice(s.analyzer) : { ...defaultChoice };
       s.exerciseKind = parseKind(s.exerciseKind);
       s.exercisesSeen = Array.isArray(s.exercisesSeen) ? s.exercisesSeen.filter((id) => typeof id === 'string') : [];
+      s.babbleLevel = parseBabbleLevel(s.babbleLevel);
       return s;
     }
   } catch { /* ignore */ }
