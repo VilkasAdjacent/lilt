@@ -6,6 +6,7 @@ import { settings, setSetting, activeBands } from '../settings.js';
 import { hzToNote } from '../analysis/index.js';
 import { KINDS, EXERCISES, pickExercise } from '../practice/exercises.js';
 import { UtteranceTracker, scoreAttempt } from '../practice/feedback.js';
+import { sessionCare } from '../practice/prosody.js';
 import { drawPitchTrace } from './draw.js';
 import { history, readouts, weightWord } from './live.js';
 
@@ -29,11 +30,13 @@ const SCORE_HINT = {
   contrast: "Each attempt is compared with the one before: F2 should move, pitch shouldn't.",
   band: 'Each attempt shows where its pitch sat.',
   loudlight: 'Each attempt: was it loud, and did it stay light?',
+  shape: "After each phrase you'll see its shape: how far the pitch moved and how it ended. Just information.",
+  ending: 'Each phrase: did the last word stay smooth and level, or lift?',
 };
 
 let current = null, visible = false, raf = 0;
 const tracker = new UtteranceTracker();
-let lastAttempt = null, attempts = [];
+let lastAttempt = null, attempts = [], tries = [], careShown = false;
 
 function choose(ex) {
   current = ex;
@@ -41,6 +44,8 @@ function choose(ex) {
   tracker.clear();
   lastAttempt = null;
   attempts = [];
+  tries = [];
+  careShown = false;
   renderCards();
 }
 const shuffle = () => choose(pickExercise({ kind: settings.exerciseKind, recent: settings.exercisesSeen }));
@@ -67,7 +72,7 @@ function renderAttempts() {
   const list = $('pxAttempts');
   list.hidden = !current.score;
   list.replaceChildren(...(attempts.length
-    ? attempts.map((a) => el('li', { textContent: a.text, className: `attempt ${a.state}` }))
+    ? attempts.map((a) => el('li', { className: `attempt ${a.state}` }, [a.text, ...(a.notes || []).map((n) => el('span', { className: 'attempt-note', textContent: n }))]))
     : [el('li', { textContent: mic.running ? 'Listening for your first try…' : 'Start the mic and have a go.', className: 'attempt empty' })]));
 }
 
@@ -101,8 +106,11 @@ function onFrame(e) {
   const u = tracker.push(e.detail);
   if (!u) return;
   const result = scoreAttempt(current.score, lastAttempt, u, { bands: activeBands(), loudDb: settings.loudDb, lightMax: settings.lightMax });
-  lastAttempt = u;
-  attempts = [result, ...attempts].slice(0, ATTEMPTS_MAX);
+  if (u.f0 > 0) lastAttempt = u;
+  tries.push(u);
+  const care = careShown ? null : sessionCare(tries, { pitch: current.score.kind !== 'step' });
+  careShown = careShown || Boolean(care);
+  attempts = [...(care ? [{ state: 'care', text: care.text }] : []), result, ...attempts].slice(0, ATTEMPTS_MAX);
   renderAttempts();
 }
 

@@ -4,6 +4,9 @@
 // jitter/shimmer, and a single "breathiness" control that raises the open
 // quotient, makes the pulse more symmetric, adds spectral tilt (one-pole
 // low-pass) and adds aspiration noise. Lip radiation = first difference.
+// Creaky voice: low F0, a short open phase (`openQuotient`), large jitter and
+// shimmer, and `alternate` (every other pulse weaker by that fraction and its
+// period longer by half that fraction: diplophonia / period doubling).
 // Filter: Klatt-style 2-pole digital resonators in cascade (F1..F5).
 //
 // All output is deterministic (seeded PRNG).
@@ -35,6 +38,7 @@ function rosenbergPeriod(n, oq, sq) {
 /** Glottal source (flow derivative, i.e. with lip radiation). */
 export function glottalSource({
   f0, fs = 48000, dur = 0.5, jitter = 0, shimmer = 0, breathiness = 0, noiseLevel = 1, seed = 1,
+  openQuotient, alternate = 0,
 }) {
   const rnd = mulberry32(seed);
   const gauss = () => {
@@ -42,19 +46,20 @@ export function glottalSource({
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   };
   const b = Math.min(1, Math.max(0, breathiness));
-  const oq = 0.45 + 0.35 * b;
+  const oq = openQuotient ?? 0.45 + 0.35 * b;
   const sq = 2.5 - 1.5 * b;
   const N = Math.round(dur * fs);
   const flow = new Float64Array(N);
   let pos = 0;
   // Fractional-period accumulation keeps the long-run mean F0 exact.
   let phaseErr = 0;
-  while (pos < N) {
-    const f = f0 * (1 + jitter * gauss());
+  for (let k = 0; pos < N; k++) {
+    const weak = alternate > 0 && k % 2 === 1;
+    const f = (f0 * (1 + jitter * gauss())) / (weak ? 1 + alternate / 2 : 1);
     const exact = fs / f + phaseErr;
     const n = Math.max(4, Math.round(exact));
     phaseErr = exact - n;
-    const amp = 1 + shimmer * gauss();
+    const amp = Math.max(0.05, 1 + shimmer * gauss()) * (weak ? 1 - alternate : 1);
     const g = rosenbergPeriod(n, oq, sq);
     for (let i = 0; i < n && pos + i < N; i++) flow[pos + i] = amp * g[i];
     pos += n;
@@ -96,9 +101,9 @@ export function resonate(x, F, B, fs) {
  */
 export function synthVowel({
   f0, formants, fs = 48000, dur = 0.5, jitter = 0, shimmer = 0, breathiness = 0,
-  noiseLevel = 1, peak = 0.5, seed = 1,
+  noiseLevel = 1, peak = 0.5, seed = 1, openQuotient, alternate = 0,
 }) {
-  const x = glottalSource({ f0, fs, dur, jitter, shimmer, breathiness, noiseLevel, seed });
+  const x = glottalSource({ f0, fs, dur, jitter, shimmer, breathiness, noiseLevel, seed, openQuotient, alternate });
   for (const { F, B } of formants) if (F < fs / 2) resonate(x, F, B, fs);
   let m = 0;
   for (let i = 0; i < x.length; i++) m = Math.max(m, Math.abs(x[i]));

@@ -7,6 +7,8 @@ import { settings, activeBands, onSettings } from '../settings.js';
 import { drawPitchTrace, drawScatter, refreshPalette } from './draw.js';
 import { hzToNote, F1_APPROX_ABOVE_F0 } from '../analysis/index.js';
 import { RollingMedian, SMOOTH_SEC, AVG_SEC } from './smoothing.js';
+import { UtteranceTracker } from '../practice/feedback.js';
+import { describeShape, describeCreak } from '../practice/prosody.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -18,11 +20,15 @@ const STAGES = ['f0', 'weight', 'f1', 'f2', 'f3', 'h1h2', 'clarity', 'dbfs'];
 const med = Object.fromEntries(STAGES.map((k) => [k, new RollingMedian(SMOOTH_SEC)]));
 const avg10 = new RollingMedian(AVG_SEC);
 const smooth = { f0s: [], lastVoiced: -1, t: 0, last: null };
+const phrases = new UtteranceTracker();
+let lastPhrase = '';
 
 mic.addEventListener('frame', (e) => {
   const r = e.detail;
   smooth.t = r.t;
   smooth.last = r;
+  const u = phrases.push(r);
+  if (u) lastPhrase = ['Last phrase:', describeShape(u.shape) || 'too short to see a shape.', describeCreak(u.creak)].filter(Boolean).join(' ');
   // Median-of-3 on F0 for the thin raw trace (kills single-frame blips).
   let f0 = NaN;
   if (r.voiced) {
@@ -47,6 +53,8 @@ mic.addEventListener('state', () => {
     history.length = 0; smooth.f0s.length = 0; smooth.lastVoiced = -1;
     for (const m of Object.values(med)) m.clear();
     avg10.clear();
+    phrases.clear();
+    lastPhrase = '';
     dirty = true;
   }
 });
@@ -168,6 +176,8 @@ function updateReadouts() {
   $('clarity').textContent = voiced && Number.isFinite(clarity) ? clarity.toFixed(2) : '–';
   const a = pitchAvg();
   $('pitchAvg').textContent = Number.isFinite(a) ? `${AVG_SEC} s average: ${Math.round(a)} Hz` : '';
+  $('phraseLine').textContent = lastPhrase;
+  $('phraseLine').hidden = !lastPhrase;
 }
 
 function renderLegend() {

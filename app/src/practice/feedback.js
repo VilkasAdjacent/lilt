@@ -1,9 +1,12 @@
 // Per-attempt feedback for practice drills. Pure, Node-testable.
-// An utterance is a run of voiced frames; pauses shorter than gapSec (consonants,
-// breaths mid-phrase) don't end it, and runs shorter than minSec are blips.
+// An utterance is a run of voiced or creaky frames (creak is often unvoiced to
+// the pitch tracker, and phrase-final creak belongs to the phrase); pauses
+// shorter than gapSec (consonants, breaths mid-phrase) don't end it, and runs
+// shorter than minSec are blips.
 
 import { quantile } from '../summary.js';
 import { hzToSemitones, hzToNote } from '../analysis/index.js';
+import { phraseShape, creakSummary, describeShape, describeCreak } from './prosody.js';
 
 const median = (frames, key) => quantile(frames.map((f) => f[key]), 0.5);
 
@@ -15,7 +18,7 @@ export class UtteranceTracker {
   }
   /** Feed every analysis frame; returns a finished utterance summary or null. */
   push(frame) {
-    if (frame.voiced) { this.voiced.push(frame); return null; }
+    if (frame.voiced || frame.creak) { this.voiced.push(frame); return null; }
     const last = this.voiced[this.voiced.length - 1];
     if (!last || frame.t - last.t < this.gapSec) return null;
     const run = this.voiced;
@@ -24,6 +27,7 @@ export class UtteranceTracker {
     return {
       start: run[0].t, end: last.t,
       f0: median(run, 'f0'), f2: median(run, 'f2'), dbfs: median(run, 'dbfs'), weight: median(run, 'weight'),
+      shape: phraseShape(run), creak: creakSummary(run),
     };
   }
   clear() { this.voiced = []; }
@@ -70,19 +74,45 @@ export function scoreLoudLight(cur, { loudDb, lightMax }) {
   return { state: 'yay', text: 'Loud and light ✓' };
 }
 
+/** Free talk: the phrase shape, as information only. */
+export function scoreShape(cur) {
+  return { state: 'info', text: describeShape(cur.shape) || `${pitchLabel(cur.f0)}. Too short to see a shape.` };
+}
+
+/** "Carry the last word": a smooth, level or lifting ending, not a creaky or dropping one. */
+export function scoreEnding(cur) {
+  if (cur.creak.where === 'end' || cur.creak.where === 'throughout') {
+    return { state: 'under', text: 'The end went a little creaky. Keep the air going right through the last word?' };
+  }
+  if (!cur.shape) return { state: 'info', text: "I couldn't follow the pitch that time. One more?" };
+  if (cur.shape.ending === 'fall') {
+    return { state: 'under', text: `Dropped ${Math.abs(cur.shape.finalSt).toFixed(1)} st at the end. Try keeping it level, or lifting a little?` };
+  }
+  return { state: 'yay', text: `Smooth to the end, ${cur.shape.ending === 'rise' ? 'with a little lift' : 'and level'} ✓` };
+}
+
 const SCORERS = {
   step: { paired: true, score: (prev, cur, spec) => scoreStep(prev, cur, spec.st) },
   contrast: { paired: true, score: (prev, cur) => scoreContrast(prev, cur) },
   band: { paired: false, score: (_, cur, spec, ctx) => scoreBand(cur, ctx.bands) },
   loudlight: { paired: false, score: (_, cur, spec, ctx) => scoreLoudLight(cur, ctx) },
+  shape: { paired: false, score: (_, cur) => scoreShape(cur), notes: ['creak'] },
+  ending: { paired: false, score: (_, cur) => scoreEnding(cur), notes: [] },
+};
+const NOTES = {
+  shape: (cur) => describeShape(cur.shape),
+  creak: (cur) => describeCreak(cur.creak),
 };
 
 /**
  * Feedback for the latest attempt under an exercise's `score` spec.
  * ctx: { bands, loudDb, lightMax }. Paired scorers compare with the previous attempt.
+ * notes: quieter lines about phrase shape and creak, unless the scorer already covers them.
  */
 export function scoreAttempt(spec, prev, cur, ctx) {
   const scorer = SCORERS[spec.kind];
-  if (scorer.paired && !prev) return { state: 'info', text: `${pitchLabel(cur.f0)}. Now the next one.` };
-  return scorer.score(prev, cur, spec, ctx);
+  const notes = (scorer.notes || Object.keys(NOTES)).map((k) => NOTES[k](cur)).filter(Boolean);
+  if (!(cur.f0 > 0)) return { state: 'info', text: "Mostly creak that time, so I couldn't read the pitch.", notes };
+  if (scorer.paired && !prev) return { state: 'info', text: `${pitchLabel(cur.f0)}. Now the next one.`, notes };
+  return { ...scorer.score(prev, cur, spec, ctx), notes };
 }
