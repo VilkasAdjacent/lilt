@@ -216,7 +216,7 @@ export const EXERCISES = [
     ],
   },
   {
-    id: 'steer-average', kind: 'pitch', title: 'Steer the average', watch: 'pitch',
+    id: 'steer-average', kind: 'pitch', title: 'Steer the average', watch: 'pitch', score: { kind: 'shape' },
     blurb: 'Talk freely and nudge the dashed line into your band. Dips are allowed.',
     steps: [
       'Talk about anything for 30 seconds: lunch, the weather, a show.',
@@ -225,7 +225,7 @@ export const EXERCISES = [
     ],
   },
   {
-    id: 'keep-ends-up', kind: 'pitch', title: 'Carry the last word', watch: 'pitch',
+    id: 'keep-ends-up', kind: 'pitch', title: 'Carry the last word', watch: 'pitch', score: { kind: 'ending' },
     blurb: 'Keep your voice going through the last syllable instead of letting it crackle down.',
     steps: [
       'Say "that sounds really good".',
@@ -378,7 +378,7 @@ export const EXERCISES = [
     ],
   },
   {
-    id: 'tell-a-friend', kind: 'together', title: 'Tell a friend about your day', watch: null,
+    id: 'tell-a-friend', kind: 'together', title: 'Tell a friend about your day', watch: null, score: { kind: 'shape' },
     blurb: 'Thirty seconds of chat to an imaginary friend, eyes off the screen.',
     steps: [
       'Pretend a friend just asked how your day was. Tell them, for about 30 seconds.',

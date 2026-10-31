@@ -2,7 +2,7 @@
 
 Run `npm test` (or plain `node --test`) from `app/`. Run `npm run report` (`node scripts/report.js`) to print every case's **actual** error for every formant implementation. Options: `--impl lpc10|lpc12` runs one implementation, `--snr 30` adds white noise to the formant cases, and `--order N` tries a different LPC order for lpc12.
 
-All signals come from `synth.js`. That's a Rosenberg glottal pulse at a known F0, with optional jitter, shimmer and a `breathiness` control. Breathiness raises the open quotient, makes the pulse more symmetric, adds extra tilt and adds aspiration noise. The pulse goes through Klatt cascade resonators F1–F5 with known frequencies and bandwidths (B = 50 + 0.06·F). The formant sets are rough AusE heed/had/hard/who'd values for male-like and female-like voices. They are **synthetic truth, not norms**. Frames are 2048 samples (43 ms at 48 kHz), hop 1024, and the result is the median over a 0.5–0.6 s vowel.
+All signals come from `synth.js`. That's a Rosenberg glottal pulse at a known F0, with optional jitter, shimmer and a `breathiness` control. Breathiness raises the open quotient, makes the pulse more symmetric, adds extra tilt and adds aspiration noise. For creaky voice, `openQuotient` overrides the open phase (0.3 = pressed), and `alternate` makes every other pulse that fraction weaker and its period longer by half that fraction (period doubling). Synthetic fry here is F0 25–65 Hz with 20 % jitter, 30 % shimmer and open quotient 0.3. The pulse goes through Klatt cascade resonators F1–F5 with known frequencies and bandwidths (B = 50 + 0.06·F). The formant sets are rough AusE heed/had/hard/who'd values for male-like and female-like voices. They are **synthetic truth, not norms**. Frames are 2048 samples (43 ms at 48 kHz), hop 1024, and the result is the median over a 0.5–0.6 s vowel.
 
 ## Defaults under test
 
@@ -29,10 +29,16 @@ Every formant test runs once per registered implementation (`formants [lpc10] �
 | LTAS over frames vs per-frame tilt, steady vowel | ±0.5 dB | |
 | dBFS | sine reads 20·log10(A/√2) ± 0.05 dB; ×2 gain reads +6.02 ± 0.01 dB | |
 | WAV export | 16-bit round trip within ½ LSB | |
+| creak hit rate, per frame | ≥ 50 % in every condition, ≥ 75 % on average | fry 25/35/50/65 Hz × {male, female} × {heed, hard}; period doubling (alternate 0.5) at 80/110/150 Hz × {male, female}; fry 35/50 Hz + white noise at 20 dB SNR |
+| creak false alarms, per frame | ≤ 10 % in every condition, ≤ 2 % on average | modal (1 % jitter, 5 % shimmer) male 75–150 Hz and female 150–280 Hz × heed/hard/who'd × breathiness 0/0.5/1; male hard 80/100/120 Hz + noise at 10 dB SNR |
+| creak per utterance | "end" / "none" / "none" / "throughout" | real analyser + `UtteranceTracker` over: 1 s modal + 0.3 s fry tail; 1.3 s modal; four syllables with 8 ms plosive bursts between; 1.2 s fry |
+| `creakRuns` | bridges one missed frame; three flags separated by pauses are not a run | |
+| phrase shape | linear 4 st glide: span 3.6 ± 0.15 st, "fall"; +2 st last 250 ms: final within 0.01 st, "rise"; a fry tail flagged creak at 62 Hz leaves the shape level | |
+| session care | creak share rising → "creak"; median pitch −1.5 st → "drift" (off for step drills); nothing before 6 attempts | |
 
 ## Results (current code)
 
-`npm test`: 177 tests, **108 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
+`npm test`: 186 tests, **117 pass, 0 fail, 69 todo**. The todos are 65 for lpc10 and 4 for lpc12; see below.
 
 ### F0
 
@@ -107,6 +113,33 @@ Results:
 Two synthetic clips of three words (had, heed, hard) with pauses: male @ 120 Hz vs female @ 180 Hz, analysed end to end with `analyzeSamples` → `profile` → `compareProfiles` / `matchTokens`.
 - Tolerances: median pitch change within 0.1 st of the truth (7.02 st); per-word F1–F3 change within 10 percentage points of the synthesis ratio (≈ two 5 % formant errors).
 - Actual: pitch change error 0.0003 st. Per-word formant change errors (points): had +5.7 / +1.1 / −2.5, heed +2.3 / −2.7 / −1.1, hard +0.5 / −3.2 / −0.8 (F1 / F2 / F3). Worst: had F1, +5.7.
+
+### Creak and phrase shape
+
+Per-frame creak rate (`creak.js` on pitchy's answer for the same frame):
+
+| condition | min | mean | max | n |
+|---|---|---|---|---|
+| fry 25 Hz | 59 % | 61 % | 63 % | 4 |
+| fry 35 Hz | 83 % | 88 % | 95 % | 4 |
+| fry 50 Hz | 95 % | 98 % | 100 % | 4 |
+| fry 65 Hz | 78 % | 82 % | 85 % | 4 |
+| period doubling 80/110/150 Hz | 98 % | 100 % | 100 % | 6 |
+| fry 35/50 Hz + noise 20 dB | 98 % | 99 % | 100 % | 2 |
+| **all creaky (hits)** | | **88 %** | | 24 |
+| modal male 75–150 Hz × 3 vowels × breathiness 0/0.5/1 | 0 % | 0 % | 0 % | 45 |
+| modal female 150–280 Hz × 3 vowels × breathiness 0/0.5/1 | 0 % | 0 % | 0 % | 36 |
+| modal male hard 80/100/120 Hz + noise 10 dB | 0 % | 0 % | 0 % | 3 |
+| **all modal (false alarms)** | | **0.00 %** | | 84 |
+| not in the suite: "rough" modal, 3 % jitter, 15 % shimmer, male 80/100/120 Hz | 0 % | 5 % | 22 % | 6 |
+| not in the suite: 8 ms noise bursts every 150 ms | | 17 % | | 1 |
+
+- **Fry at 25 Hz is the weakest case.** A 43 ms frame holds one or two pulses, and a pulse near the frame edge has no valley on one side. The utterance logic bridges one missed frame, so a 25 Hz tail still forms runs.
+- **The zero false-alarm rate is mostly the modal gate.** Every modal frame here is voiced by pitchy at ≥ 70 Hz. The pulse cues only see frames pitchy rejects: onsets, consonants, rough voice and creak. The "rough" voice (well past typical modal jitter and shimmer) trips the jitter cue in up to 22 % of frames, because the prominence test skips a weaker pulse. Bursts trip the lone-pulse cue in 17 % of frames, always in runs of ≤ 2. Neither condition is in the suite, which is why the ≥ 3-frame run rule exists.
+
+Per utterance (real analyser + tracker): modal + fry tail reads **end** (25 % of sounding frames, 79 % of the last 0.4 s, 0 % before it). Modal only reads **none**, syllables with bursts read **none**, and 1.2 s of fry reads **throughout** (100 %). Phrase shape: the 4 st glide reads a 3.51 st span (expected 3.6: 56 frames quantised, tolerance 0.15) and a −1.63 st "fall". The +2 st ending reads +2.00 st "rise". The fry tail case reads a 0.00 st span, "level".
+
+Cost: about 0.02–0.03 ms per frame in Node on a desktop CPU, so it fits easily within the Worker's per-frame budget.
 
 ## lpc12 order: why round(fs/1000) and not 2 + fs/1000
 

@@ -265,6 +265,9 @@ main { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; outline: none; 
 .attempt + .attempt { opacity: 0.75; }
 .attempt.yay { background: linear-gradient(135deg, var(--pink), #c9a6ff); color: #2a0f2e; }
 .attempt.over, .attempt.heavy { background: var(--lav); }
+.attempt.care { background: transparent; border: 2px solid var(--sun); }
+.attempt-note { display: block; margin-top: 2px; font-weight: 400; font-size: 0.85rem; opacity: 0.85; }
+.phrase-line { color: var(--ink-soft); margin: 6px 0 0; }
 .attempt.empty { color: var(--ink-soft); font-weight: 400; background: transparent; border: 2px dashed var(--grid); }
 .ex-group h3 { font: 600 1rem var(--font-display); margin: 14px 0 8px; }
 .ex-picks { display: flex; flex-wrap: wrap; gap: 8px; }

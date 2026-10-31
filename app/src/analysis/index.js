@@ -12,6 +12,7 @@ import pitchy from './pitch.js';
 import lpc10 from './formants-lpc10.js';
 import lpc12 from './formants.js';
 import h1h2, { tiltDb } from './weight.js';
+import * as creakDetector from './creak.js';
 import { dbfs } from './dsp.js';
 
 export const registry = {
@@ -58,7 +59,8 @@ export const defaultChoice = { pitch: 'pitchy', formants: 'lpc12', weight: 'h1h2
  *   h1h2, h1h2c, tilt, alpha, weight,  // see weight.js (NaN if unvoiced)
  *   ltas,                    // dB, 1-4 kHz vs 50-1000 Hz over the last `ltasFrames`
  *                            // voiced frames (power-averaged = the benchmarked LTAS ratio)
- *   voiced: boolean
+ *   voiced: boolean,
+ *   creak: boolean           // creaky/fry frame (creak.js); usually not `voiced`
  * }
  */
 export function createAnalyzer({ sampleRate, ltasFrames = 48, ...choice } = {}) {
@@ -71,11 +73,12 @@ export function createAnalyzer({ sampleRate, ltasFrames = 48, ...choice } = {}) 
   function analyze(frame) {
     const out = {
       dbfs: dbfs(frame), f0: NaN, clarity: 0, f1: NaN, f2: NaN, f3: NaN, f1Approx: false,
-      h1h2: NaN, h1h2c: NaN, tilt: NaN, alpha: NaN, weight: NaN, ltas: NaN, voiced: false,
+      h1h2: NaN, h1h2c: NaN, tilt: NaN, alpha: NaN, weight: NaN, ltas: NaN, voiced: false, creak: false,
     };
     const p = P.estimate(frame, sampleRate);
     out.f0 = p.f0;
     out.clarity = p.clarity;
+    out.creak = creakDetector.estimate(frame, sampleRate, p).creak;
     if (!Number.isFinite(p.f0)) return out;
     out.voiced = true;
     out.f1Approx = p.f0 > F1_APPROX_ABOVE_F0;

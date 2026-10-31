@@ -58,7 +58,9 @@ src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
                          (pickAvoiding: random pick that skips recent ids, shared with tips)
   tips.js                short voice-care / noise / everyday / going-easy / support tips
-  feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light)
+  feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light,
+                         phrase shape, phrase ending) and the quieter per-attempt notes
+  prosody.js             phrase shape (semitone range, final rise/fall/level), where creak sat, session care nudges
 src/analysis/            ALL DSP. Pure functions on Float32Array, run in Node too
   index.js               plug-in registry + createAnalyzer() (the only thing the UI calls)
   pitch.js               pitchy (MPM), clarity ≥ 0.8, subharmonic guard
@@ -68,6 +70,7 @@ src/analysis/            ALL DSP. Pure functions on Float32Array, run in Node to
   lpc.js                 autocorr, Levinson, root finding (shared)
   weight.js              H1–H2 + 1–4 kHz vs 50–1000 Hz tilt (ports of bench/lib/tilt.mjs),
                          Iseli–Alwan H1*–H2*, alpha ratio, weight 0..1
+  creak.js               per-frame creak (vocal fry) flag from very-short-term power pulses + pitchy's answer
   dsp.js                 windows, FFT, decimation, Kaiser-sinc resampler, dBFS
 test/                    synth.js (glottal source + formant cascade), cases.js, *.test.js
 scripts/report.js        error tables
@@ -82,6 +85,8 @@ Each stage is an object `{ name, estimate(frame, sampleRate, ctx) }` with these 
 - **weight:** `{ h1h2, h1h2c, tilt, alpha, weight }` (it may also return `ltasLo`/`ltasHi`, the band powers that `createAnalyzer` averages into `ltas`)
 
 Current defaults: `pitchy` (clarity ≥ 0.8), **`lpc12`** formants (`lpc10` selectable; reverted as default until checked on real female speech) and `h1h2` weight. `createAnalyzer` also returns `f1Approx` (true when F0 > 200 Hz: F1 is probably on a harmonic, and the UI shows it greyed with "≈") and `ltas`, the tilt power-averaged over the last ~1 s of voiced frames. Old saved settings that name the formant engine `lpc` are mapped to `lpc12`.
+
+Every frame also carries `creak` (boolean, from `creak.js`; not a swappable stage). Creaky frames are usually *not* `voiced`, because pitchy can't find a modal period in them.
 
 The analysis modules are pure and DOM-free, because they run inside the Worker.
 
@@ -117,6 +122,16 @@ Saved settings are parsed on load. Unknown corners and implausible formants are 
 - **Word by word** (first vs last clip): utterances come from the Practice segmenter. A reading of the hVd list (18 words, or the 11 monophthongs, any number of times through) pairs by word, with the median over repeats; otherwise clips with the same word count (≤ 24) pair in order.
 - **Not ported from compare.py / run.py:** CPPS, H1–A3*, VTL, the glide and sustained-vowel tasks, and the DP alignment that tolerates a skipped hVd word. A skipped or extra word shifts the labels after it.
 
+## Intonation and creak feedback
+
+Both are descriptive. Range is reported, never scored up, and nothing rewards creak.
+
+- **Where it shows.** Practice attempts get a quieter note line under the main feedback: the phrase shape and, if any, where creak sat. "Steer the average" and "Tell a friend" score the shape as information only. "Carry the last word" scores the ending: smooth and level or lifting is the ✓, and a creaky or dropping ending gets a gentle "keep the air going". Live shows one "Last phrase:" line under the pitch trace.
+- **Phrase shape** (`prosody.js`, per utterance from `UtteranceTracker`). Semitones re the phrase's own median F0, modal voiced frames only (creaky frames are left out, so a fry tail doesn't read as a big fall). Range is the 5–95 % span. The ending is the median of the last 200 ms against the phrase median: ≥ +1 st rise, ≤ −1 st fall, otherwise level. A phrase of 1.5 s or more under 2 st reads "fairly level", without advice.
+- **Creak per frame** (`creak.js`). A frame needs ≥ −55 dBFS, and pitchy must not have found a period at ≥ 70 Hz (a confident modal frame is never creak). Then any of these: pitchy found a period under 70 Hz; prominent pulses in a 100–1500 Hz, 3 ms power contour (≥ 9 dB above the valleys either side, after Ishi et al. 2008) are spaced like < 70 Hz; they are irregular (jitter > 25 % or > 4 dB alternating peaks, below 140 Hz); or a single pulse stands ≥ 15 dB out of an aperiodic frame (fry below ~45 Hz has only one pulse per 43 ms frame).
+- **Creak per utterance.** Creak frames count only in runs of ≥ 3 within 50 ms of each other, which removes plosive bursts (≤ 2 frames) and stray flags across pauses. "End" = ≥ 30 % of the last 0.4 s (or the second half of a shorter word) with < 15 % before it: "a style choice, nothing wrong". "Throughout" = ≥ 30 % before the end: a kind nudge towards breath and ease, or rest. "Some" = ≥ 10 % overall.
+- **Session care.** After 6 attempts on one exercise, Practice compares the last 3 with the first 3, once per exercise. Creak share up by ≥ 15 points to ≥ 25 %, or (except in step drills) the median pitch down ≥ 1.5 st, adds a water-and-rest nudge.
+
 ## Known limitations
 
 - **Why lpc12 is the default, not lpc10.** lpc10 reproduces Praat on real recordings (research/library_comparison.md). On this app's noise-free synthetic grid it misses F2/F3 on all 64 cases, because a spare pole lands between F1 and F2. With a noise floor it passes most male cases, but female vowels still fail. lpc12 passes 60 of 64. Numbers are in `test/README.md`. Check lpc10 on real female speech. lpc10 is selectable in Settings.
@@ -125,4 +140,5 @@ Saved settings are parsed on load. Unknown corners and implausible formants are 
 - dBFS depends on the mic and browser. Use *Settings → "use my current level"* to set the "loud" threshold.
 - Analysis runs about 47 frames/s (hop 1024 at 48 kHz) in the Worker. The research estimates ≈ 3.3 ms per frame, phone-scaled, for this pipeline.
 - The tilt measure changed (now dB, 1–4 kHz vs 50–1000 Hz, not dB/octave), so weight scores from before this change aren't comparable with new ones.
+- The creak detector is only checked on synthetic fry, so it needs listening checks on real speech. Synthetic numbers are in `test/README.md`. Creak at 70–100 Hz that pitchy still reads as periodic (likely for a higher modal voice) is not detected by design, so phrase-final creak from a ~200 Hz voice may be missed.
 - No offline service worker yet.

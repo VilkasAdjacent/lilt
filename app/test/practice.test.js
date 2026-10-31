@@ -45,7 +45,7 @@ test('exercise pool and tips: well-formed, unique ids, scorers that exist', () =
   const ids = EXERCISES.map((e) => e.id);
   assert.equal(new Set(ids).size, ids.length, 'duplicate exercise id');
   Object.keys(KINDS).forEach((kind) => assert.ok(EXERCISES.some((e) => e.kind === kind), `no ${kind} exercise`));
-  const utt = { f0: 160, f2: 1700, dbfs: -30, weight: 0.3 };
+  const utt = { f0: 160, f2: 1700, dbfs: -30, weight: 0.3, shape: null, creak: { share: 0, finalShare: 0, restShare: 0, where: 'none' } };
   const ctx = { bands: [{ lo: 150, hi: 170 }], loudDb: -35, lightMax: 0.45 };
   EXERCISES.forEach((e) => {
     assert.ok(e.kind in KINDS && e.title && e.blurb, e.id);
