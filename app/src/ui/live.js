@@ -53,6 +53,18 @@ mic.addEventListener('state', () => {
 const sm = (k) => med[k].value(smooth.t);
 /** Shown while there's anything voiced in the smoothing window. */
 const haveVoice = () => mic.running && med.f0.value(smooth.t) > 0;
+const pitchAvg = () => (mic.running && avg10.count >= 20 ? avg10.value(smooth.t) : NaN);
+
+export const weightWord = (w) => (w < 0.3 ? 'light ✨' : w < 0.5 ? 'lightish' : w < 0.7 ? 'medium' : 'heavy');
+
+/** The smoothed values the Live readouts show, for other views to reuse. */
+export function readouts() {
+  const voiced = haveVoice();
+  return {
+    t: smooth.t, voiced, avg: pitchAvg(), dbfs: sm('dbfs'),
+    f0: voiced ? sm('f0') : NaN, f2: voiced ? sm('f2') : NaN, weight: voiced ? sm('weight') : NaN,
+  };
+}
 
 export const voicedRecently = () => mic.running && smooth.t - smooth.lastVoiced < 0.35;
 /** Median voiced dBFS over the last few seconds (for loudness calibration). */
@@ -82,8 +94,7 @@ function render() {
   if (dirty) {
     dirty = false;
     const now = mic.running ? smooth.t : 0;
-    const avg = mic.running && avg10.count >= 20 ? avg10.value(now) : NaN;
-    drawPitchTrace($('liveTrace'), history, now - settings.traceSeconds, now, { avg });
+    drawPitchTrace($('liveTrace'), history, now - settings.traceSeconds, now, { avg: pitchAvg() });
     const age = 4;
     const you = haveVoice() ? { dbfs: sm('dbfs'), weight: sm('weight') } : null;
     drawScatter($('llScatter'), history.filter((h) => h.t > now - age && h.f0 > 0).map((h) => ({ ...h, age: (now - h.t) / age })), {
@@ -120,7 +131,7 @@ function updateReadouts() {
   const w = sm('weight');
   $('weightFill').style.width = voiced && Number.isFinite(w) ? pct(w, 0, 1) : '0%';
   $('weightMark').style.left = pct(settings.lightMax, 0, 1);
-  $('weightWord').textContent = voiced && Number.isFinite(w) ? (w < 0.3 ? 'light ✨' : w < 0.5 ? 'lightish' : w < 0.7 ? 'medium' : 'heavy') : '–';
+  $('weightWord').textContent = voiced && Number.isFinite(w) ? weightWord(w) : '–';
 
   // Loud & light chip, with a little hysteresis so it doesn't flicker.
   let st = 'idle';
@@ -155,8 +166,8 @@ function updateReadouts() {
   $('tilt').textContent = voiced && Number.isFinite(tiltV) ? `${tiltV.toFixed(0)} dB` : '–';
   const clarity = sm('clarity');
   $('clarity').textContent = voiced && Number.isFinite(clarity) ? clarity.toFixed(2) : '–';
-  const a = avg10.count >= 20 ? avg10.value(smooth.t) : NaN;
-  $('pitchAvg').textContent = mic.running && Number.isFinite(a) ? `${AVG_SEC} s average: ${Math.round(a)} Hz` : '';
+  const a = pitchAvg();
+  $('pitchAvg').textContent = Number.isFinite(a) ? `${AVG_SEC} s average: ${Math.round(a)} Hz` : '';
 }
 
 function renderLegend() {

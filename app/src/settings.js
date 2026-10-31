@@ -2,6 +2,7 @@
 // private mode). Change events let views react.
 
 import { normalizeChoice, defaultChoice } from './analysis/index.js';
+import { parseKind } from './practice/exercises.js';
 
 export const BAND_PRESETS = {
   androgynous: { label: 'Androgynous', lo: 145, hi: 175 },
@@ -19,6 +20,8 @@ export const DEFAULTS = {
   analyzer: { ...defaultChoice },
   analyzerPicked: false,    // true once engines are chosen by hand in Settings
   traceSeconds: 8,
+  exerciseKind: 'any',      // Practice shuffle filter: 'any' or a key of KINDS
+  exercisesSeen: [],        // recent exercise ids, oldest first, so the shuffle avoids repeats
 };
 
 const KEY = 'voice-garden-settings-v1';
@@ -32,6 +35,8 @@ function load() {
       // Engines nobody picked by hand follow the current defaults (the whole
       // settings object is saved on any change, so a stale default sticks otherwise).
       s.analyzer = s.analyzerPicked ? normalizeChoice(s.analyzer) : { ...defaultChoice };
+      s.exerciseKind = parseKind(s.exerciseKind);
+      s.exercisesSeen = Array.isArray(s.exercisesSeen) ? s.exercisesSeen.filter((id) => typeof id === 'string') : [];
       return s;
     }
   } catch { /* ignore */ }

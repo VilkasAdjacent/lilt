@@ -234,6 +234,34 @@ main { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; outline: none; 
 .formants .approx { color: var(--ink-soft); opacity: 0.75; font-weight: 500; }
 .formants .lbl { display: block; font: 800 0.75rem var(--font-body); color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
 
+/* ------------------------------------------------------------ practice -- */
+.kind-tag {
+  display: inline-block; vertical-align: middle; padding: 2px 10px; border: 2px solid var(--line); border-radius: 999px;
+  background: var(--lav); font: 600 0.8rem var(--font-display); white-space: nowrap;
+}
+.tip .ex-name { font: 600 1.15rem var(--font-display); margin: 0 0 2px; }
+.ex-title { font-size: 1.5rem; margin: 8px 0 4px; }
+.ex-card > p { margin: 0 0 8px; }
+.ex-steps { margin: 0 0 10px; padding-left: 1.4em; }
+.ex-steps li { margin-bottom: 0.4em; }
+.ex-steps li::marker { font: 600 1em var(--font-display); color: var(--pink-deep); }
+.care { background: var(--surface-2); border-radius: 14px; padding: 8px 12px; font-weight: 700; }
+.ex-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.ex-foot .select { min-height: 44px; }
+.ex-foot .select select { min-width: 8em; }
+.formants > div.watching { background: var(--pink); color: #2a0f2e; box-shadow: 3px 3px 0 var(--line); }
+.formants > div.watching .lbl, .formants > div.watching small { color: #2a0f2e; }
+.formants small { font: 700 0.8rem var(--font-body); }
+.attempts { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.attempt { padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 700; font-size: 0.95rem; animation: pop-in 0.25s ease-out; }
+.attempt + .attempt { opacity: 0.75; }
+.attempt.yay { background: linear-gradient(135deg, var(--pink), #c9a6ff); color: #2a0f2e; }
+.attempt.over, .attempt.heavy { background: var(--lav); }
+.attempt.empty { color: var(--ink-soft); font-weight: 400; background: transparent; border: 2px dashed var(--grid); }
+.ex-group h3 { font: 600 1rem var(--font-display); margin: 14px 0 8px; }
+.ex-picks { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-picks .btn { box-shadow: 2px 2px 0 var(--line); }
+
 /* -------------------------------------------------------------- record -- */
 .prompt-card .prompt { font: 600 1.25rem/1.35 var(--font-display); margin: 4px 0 10px; }
 .prompt-card p { margin: 0; }
@@ -314,7 +342,7 @@ input[type=range] { width: 100%; height: 44px; accent-color: var(--pink-deep); }
 
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   height: calc(var(--tab-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface); border-top: 3px solid var(--line);

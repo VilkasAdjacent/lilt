@@ -35,7 +35,7 @@ Don't use "Deploy from a branch". It would publish the whole repo, including `re
 ## Layout
 
 ```
-index.html               all view markup (Home, Live, Record, Clips, Settings, About)
+index.html               all view markup (Home, Practice, Live, Record, Clips, Settings, About)
 src/main.js              router, theme, session timer + rest nudge, tiny session, mic button
 src/settings.js          settings (localStorage) + target bands
 src/summary.js           per-recording stats (pure)
@@ -47,7 +47,10 @@ src/audio/frame.js       sliding-frame helper shared by both paths
 src/audio/capture-worklet.js
 src/audio/wav.js         16-bit WAV encode/decode (pure)
 src/store/db.js          IndexedDB recordings
-src/ui/*.js              views + canvas drawing
+src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser)
+src/practice/            pure, Node-testable
+  exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
+  feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light)
 src/analysis/            ALL DSP. Pure functions on Float32Array, run in Node too
   index.js               plug-in registry + createAnalyzer() (the only thing the UI calls)
   pitch.js               pitchy (MPM), clarity ≥ 0.8, subharmonic guard

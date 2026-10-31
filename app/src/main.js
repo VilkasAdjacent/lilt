@@ -6,13 +6,14 @@ import { refreshPalette } from './ui/draw.js';
 import { fmtDuration } from './summary.js';
 import * as home from './ui/home.js';
 import * as live from './ui/live.js';
+import * as practice from './ui/practice.js';
 import * as record from './ui/record.js';
 import * as library from './ui/library.js';
 import * as settingsView from './ui/settings-view.js';
 
 const $ = (id) => document.getElementById(id);
-const VIEWS = ['home', 'live', 'record', 'library', 'settings', 'about'];
-const modules = { home, live, record, library, settings: settingsView };
+const VIEWS = ['home', 'practice', 'live', 'record', 'library', 'settings', 'about'];
+const modules = { home, practice, live, record, library, settings: settingsView };
 let current = null;
 
 // ------------------------------------------------------------------ theme --
@@ -114,7 +115,7 @@ setInterval(tick, 500);
 
 export function startTiny() {
   session.tiny = { endMs: session.ms + 2 * 60000 };
-  location.hash = '#/live';
+  location.hash = '#/practice';
   return startMic();
 }
 function finishTiny() {
@@ -160,7 +161,7 @@ export function stopMic() {
 
 export function updateFab() {
   const wrap = $('fabWrap'), fab = $('fab'), label = $('fabLabel');
-  const show = current === 'live' || current === 'record';
+  const show = current === 'live' || current === 'practice' || current === 'record';
   wrap.hidden = !show;
   if (!show) return;
   fab.classList.toggle('rec', current === 'record');
