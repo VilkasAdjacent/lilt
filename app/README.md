@@ -76,6 +76,8 @@ src/analysis/            ALL DSP. Pure functions on Float32Array, run in Node to
   formants-lpc10.js      "lpc10" (selectable): port of bench/lib/lpc.mjs. Resample to 10 kHz → pre-emphasis
                          from 50 Hz → Praat Gaussian → 10 poles → Durand–Kerner + Newton roots
   formants.js            "lpc12" (previous): decimate → 0.97 pre-emphasis → Hamming → 12 poles, BW < 500
+  formants-dap.js        "dap" (selectable): discrete all-pole fit to the harmonic peaks at the frame's F0
+                         (El-Jaroudi & Makhoul); 12 poles, 10 if a pole lands on the unit circle
   lpc.js                 autocorr, Levinson, root finding (shared)
   weight.js              H1–H2 + 1–4 kHz vs 50–1000 Hz tilt (ports of bench/lib/tilt.mjs),
                          Iseli–Alwan H1*–H2*, alpha ratio, weight 0..1
@@ -90,10 +92,10 @@ scripts/report.js        error tables
 Each stage is an object `{ name, estimate(frame, sampleRate, ctx) }` with these return shapes:
 
 - **pitch:** `{ f0, clarity }`
-- **formants:** `{ f1, f2, f3, bw }`
+- **formants:** `{ f1, f2, f3, bw }`. `ctx.f0` is the frame's pitch (formant engines are only called on voiced frames); `dap` needs it
 - **weight:** `{ h1h2, h1h2c, tilt, alpha, weight }` (it may also return `ltasLo`/`ltasHi`, the band powers that `createAnalyzer` averages into `ltas`)
 
-Current defaults: `pitchy` (clarity ≥ 0.8), **`lpc12`** formants (`lpc10` selectable; reverted as default until checked on real female speech) and `h1h2` weight. `createAnalyzer` also returns `f1Approx` (true when F0 > 200 Hz: F1 is probably on a harmonic, and the UI shows it greyed with "≈") and `ltas`, the tilt power-averaged over the last ~1 s of voiced frames. Old saved settings that name the formant engine `lpc` are mapped to `lpc12`.
+Current defaults: `pitchy` (clarity ≥ 0.8), **`lpc12`** formants (`lpc10` selectable, reverted as default until checked on real female speech; `dap` selectable, better F1 on close vowels above F0 ≈ 220 Hz but mixed elsewhere) and `h1h2` weight. `createAnalyzer` also returns `f1Approx` (true when F0 > 200 Hz: F1 is probably on a harmonic, and the UI shows it greyed with "≈") and `ltas`, the tilt power-averaged over the last ~1 s of voiced frames. Old saved settings that name the formant engine `lpc` are mapped to `lpc12`.
 
 Every frame also carries `creak` (boolean, from `creak.js`; not a swappable stage). Creaky frames are usually *not* `voiced`, because pitchy can't find a modal period in them.
 
@@ -156,10 +158,10 @@ Exercises with `babble: true` show a *Start the café* button and a quiet → bu
 ## Known limitations
 
 - **Why lpc12 is the default, not lpc10.** lpc10 reproduces Praat on real recordings (research/library_comparison.md). On this app's noise-free synthetic grid it misses F2/F3 on all 64 cases, because a spare pole lands between F1 and F2. With a noise floor it passes most male cases, but female vowels still fail. lpc12 passes 60 of 64. Numbers are in `test/README.md`. Check lpc10 on real female speech. lpc10 is selectable in Settings.
-- LPC F1 locks onto a harmonic at high F0, for every method. It is biased toward 2·F0 on close vowels (ee/oo) from F0 ≈ 180 Hz, and the UI marks F1 "≈" above 200 Hz. See `test/README.md`.
+- LPC F1 locks onto a harmonic at high F0, for every LPC method. It is biased toward 2·F0 on close vowels (ee/oo) from F0 ≈ 180 Hz, and the UI marks F1 "≈" above 200 Hz. The selectable `dap` engine fits only the harmonics and cuts close-vowel F1 error at F0 180–300 Hz from a median 63 to 54 Hz (p90 92 → 62 Hz) on the synthetic sweep. It still reads about +50 Hz high there, because a strong 2nd source harmonic looks like a higher F1, and it has worse outliers on open vowels. So it is not the default, and the "≈" stays. See `test/README.md`.
 - The weight score is an uncalibrated heuristic, and it depends on the vowel. The thresholds in `weight.js` are placeholders until there are real recordings.
 - dBFS depends on the mic and browser. Use *Settings → "use my current level"* to set the "loud" threshold.
-- Analysis runs about 47 frames/s (hop 1024 at 48 kHz) in the Worker. The research estimates ≈ 3.3 ms per frame, phone-scaled, for this pipeline.
+- Analysis runs about 47 frames/s (hop 1024 at 48 kHz) in the Worker. The research estimates ≈ 3.3 ms per frame, phone-scaled, for this pipeline. In desktop Node, `dap` takes 0.3–0.5 ms per frame and `lpc12` 0.14 ms (`npm run report` prints them).
 - The tilt measure changed (now dB, 1–4 kHz vs 50–1000 Hz, not dB/octave), so weight scores from before this change aren't comparable with new ones.
 - The creak detector is only checked on synthetic fry, so it needs listening checks on real speech. Synthetic numbers are in `test/README.md`. Creak at 70–100 Hz that pitchy still reads as periodic (likely for a higher modal voice) is not detected by design, so phrase-final creak from a ~200 Hz voice may be missed.
 - The café has only been checked numerically and in headless Chrome, not listened to. Whether it reads as a busy room, and how much a phone speaker leaks into the mic, still need checking on a real device.

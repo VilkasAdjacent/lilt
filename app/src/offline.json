@@ -4,6 +4,7 @@
   "manifest.webmanifest",
   "src/analysis/creak.js",
   "src/analysis/dsp.js",
+  "src/analysis/formants-dap.js",
   "src/analysis/formants-lpc10.js",
   "src/analysis/formants.js",
   "src/analysis/index.js",
