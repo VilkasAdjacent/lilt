@@ -20,7 +20,7 @@ The page does not use SharedArrayBuffer or need COOP/COEP headers.
 
 ```sh
 cd app
-npm test               # node --test: DSP recovery on synthetic vowels, WAV, summaries
+npm test               # node --test: DSP recovery on synthetic vowels, WAV, summaries, clip comparison
 npm run report         # prints the actual errors for every case (markdown)
 ```
 
@@ -40,6 +40,8 @@ src/main.js              router, theme, session timer + rest nudge, tiny session
 src/settings.js          settings (localStorage) + target bands
 src/summary.js           per-recording stats (pure)
 src/vowels.js            vowel space (pure): corner vowels, scale presets, targets, capture median, plot axes, rings
+src/compare.js           clip comparison (pure): whole-signal analysis, per-clip profile, changes, word matching
+src/norms.js             published formant norms (Elvin 2016, Hillenbrand & Clark 2009), context only
 src/audio/capture.js     getUserMedia (EC/NS/AGC off + warning), AudioWorklet → ScriptProcessor
                          → MediaRecorder fallback, recording (PCM chunks stay on the main thread)
 src/audio/analysis-host.js  runs analysis in a module Web Worker, or on the main thread as a fallback
@@ -50,7 +52,8 @@ src/audio/wav.js         16-bit WAV encode/decode (pure)
 src/store/db.js          IndexedDB recordings
 src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser;
                          tips.js: Home tip card + About tip list;
-                         vowel-space.js: the Live "Vowel space" panel)
+                         vowel-space.js: the Live "Vowel space" panel,
+                         compare-view.js: Compare clips inside Clips)
 src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
                          (pickAvoiding: random pick that skips recent ids, shared with tips)
@@ -104,6 +107,15 @@ A collapsible panel in Live: an F1×F2 chart in the phonetics orientation (F2 fa
 - **Before any capture:** generic reference rings (Peterson & Barney women's means), labelled as orientation only.
 
 Saved settings are parsed on load. Unknown corners and implausible formants are dropped, and missing or out-of-range factors fall back to land. Tests cover the pure maths (`test/vowels.test.js`).
+
+## Comparing clips
+
+*Clips → Compare clips* is the in-app counterpart of `analysis/compare.py`. Pick two to four saved clips, or add local files (WAV everywhere; other formats if the browser's `decodeAudioData` can read them). Files are decoded in the page and never uploaded or stored.
+
+- **Same engines for every clip.** Each clip's audio is decoded and re-analysed with the current engines (`analyzeSamples` in `compare.js`: the live `createAnalyzer` + sliding frame, 2048/1024), pulled in ~30 ms slices so the page stays responsive. Results are cached per clip and engine choice for the visit. A saved clip the browser can't decode falls back to its stored trace (no F3 or H1–H2*).
+- **What's shown,** each against the earliest clip: pitch median, 5th and 95th percentiles (change in semitones), 5–95 % range and SD in semitones, time in your bands; F1/F2/F3 medians over voiced frames (change in %); weight median, loud-and-light fraction, H1–H2* and LTAS tilt (dB). Changes under a small threshold read "about the same". Context lines give the target bands and the published women/men formant ratios (Elvin et al. 2016 AusE, Hillenbrand & Clark 2009).
+- **Word by word** (first vs last clip): utterances come from the Practice segmenter. A reading of the hVd list (18 words, or the 11 monophthongs, any number of times through) pairs by word, with the median over repeats; otherwise clips with the same word count (≤ 24) pair in order.
+- **Not ported from compare.py / run.py:** CPPS, H1–A3*, VTL, the glide and sustained-vowel tasks, and the DP alignment that tolerates a skipped hVd word. A skipped or extra word shifts the labels after it.
 
 ## Known limitations
 

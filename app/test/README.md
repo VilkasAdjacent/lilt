@@ -102,6 +102,12 @@ Results:
 - Tilt also depends strongly on the vowel: /a/ reads about −5 to −17 dB, /i/ about −23 to −34 dB. Both points fit the research advice: read tilt together with H1–H2, and compare like with like.
 - The score still uses *uncorrected* H1–H2. `h1h2c` (Iseli–Alwan) depends on the biased F1.
 
+### Clip comparison (`compare.test.js`)
+
+Two synthetic clips of three words (had, heed, hard) with pauses: male @ 120 Hz vs female @ 180 Hz, analysed end to end with `analyzeSamples` → `profile` → `compareProfiles` / `matchTokens`.
+- Tolerances: median pitch change within 0.1 st of the truth (7.02 st); per-word F1–F3 change within 10 percentage points of the synthesis ratio (≈ two 5 % formant errors).
+- Actual: pitch change error 0.0003 st. Per-word formant change errors (points): had +5.7 / +1.1 / −2.5, heed +2.3 / −2.7 / −1.1, hard +0.5 / −3.2 / −0.8 (F1 / F2 / F3). Worst: had F1, +5.7.
+
 ## lpc12 order: why round(fs/1000) and not 2 + fs/1000
 
 This applies to `lpc12` only. `lpc10` is fixed at 10 poles at 10 kHz, as Praat is.
