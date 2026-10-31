@@ -1,7 +1,9 @@
 // Practice feedback: utterance segmentation and pitch-step scoring.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { UtteranceTracker, scoreStep } from '../src/practice/feedback.js';
+import { UtteranceTracker, scoreStep, scoreAttempt } from '../src/practice/feedback.js';
+import { KINDS, EXERCISES } from '../src/practice/exercises.js';
+import { TIP_TOPICS, TIPS } from '../src/practice/tips.js';
 
 const FPS = 47;
 /** Frames at FPS for `sec` seconds starting at t0; f0 = NaN means unvoiced. */
@@ -37,4 +39,21 @@ test('scoreStep: semitone size against the asked-for range, either direction', (
   assert.equal(scoreStep({ f0: 168 }, { f0: 150 }, range).state, 'yay');
   assert.equal(scoreStep({ f0: 150 }, { f0: 155 }, range).state, 'under');
   assert.equal(scoreStep({ f0: 150 }, { f0: 300 }, range).state, 'over');
+});
+
+test('exercise pool and tips: well-formed, unique ids, scorers that exist', () => {
+  const ids = EXERCISES.map((e) => e.id);
+  assert.equal(new Set(ids).size, ids.length, 'duplicate exercise id');
+  Object.keys(KINDS).forEach((kind) => assert.ok(EXERCISES.some((e) => e.kind === kind), `no ${kind} exercise`));
+  const utt = { f0: 160, f2: 1700, dbfs: -30, weight: 0.3 };
+  const ctx = { bands: [{ lo: 150, hi: 170 }], loudDb: -35, lightMax: 0.45 };
+  EXERCISES.forEach((e) => {
+    assert.ok(e.kind in KINDS && e.title && e.blurb, e.id);
+    assert.ok(e.steps.length && e.steps.every((s) => typeof s === 'string' && s), `${e.id} steps`);
+    assert.ok([null, 'pitch', 'resonance', 'loudlight'].includes(e.watch), `${e.id} watch`);
+    if (e.score) assert.equal(typeof scoreAttempt(e.score, utt, utt, ctx).text, 'string', `${e.id} scorer`);
+  });
+  const tipIds = TIPS.map((t) => t.id);
+  assert.equal(new Set(tipIds).size, tipIds.length, 'duplicate tip id');
+  TIPS.forEach((t) => assert.ok(t.topic in TIP_TOPICS && t.text, t.id));
 });

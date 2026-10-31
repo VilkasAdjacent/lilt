@@ -1,4 +1,7 @@
-// Home: one big "tiny session" button and warm copy. The exercise teaser card is filled by practice.js.
+// Home: one big "tiny session" button and warm copy. The exercise teaser card is filled by practice.js,
+// the tip card (and About's tip list) by tips.js.
+
+import * as tips from './tips.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -12,4 +15,5 @@ const LEDES = [
 export function init({ startTiny }) {
   $('homeLede').textContent = LEDES[Math.floor(Math.random() * LEDES.length)];
   $('tinyBtn').addEventListener('click', () => startTiny());
+  tips.init();
 }

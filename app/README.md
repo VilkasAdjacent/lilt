@@ -47,9 +47,12 @@ src/audio/frame.js       sliding-frame helper shared by both paths
 src/audio/capture-worklet.js
 src/audio/wav.js         16-bit WAV encode/decode (pure)
 src/store/db.js          IndexedDB recordings
-src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser)
+src/ui/*.js              views + canvas drawing (practice.js: Practice tab + Home teaser;
+                         tips.js: Home tip card + About tip list)
 src/practice/            pure, Node-testable
   exercises.js           the exercise pool (kinds, steps, what to watch, how to score) + shuffle
+                         (pickAvoiding: random pick that skips recent ids, shared with tips)
+  tips.js                short voice-care / noise / everyday / going-easy / support tips
   feedback.js            utterance segmenter + per-attempt scorers (pitch step, F2 contrast, band, loud × light)
 src/analysis/            ALL DSP. Pure functions on Float32Array, run in Node too
   index.js               plug-in registry + createAnalyzer() (the only thing the UI calls)
