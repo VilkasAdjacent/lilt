@@ -27,6 +27,9 @@ node_modules/
 # Synthetic bench vowels (regenerate with bench/praat_truth.py)
 /bench/data/synth/
 
+# ---- Agent scratch ----
+/.agent_scratch/
+
 # ---- OS / editor ----
 .DS_Store
 Thumbs.db
